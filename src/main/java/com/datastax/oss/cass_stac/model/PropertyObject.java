@@ -6,6 +6,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -15,11 +17,12 @@ import java.util.*;
 public class PropertyObject {
 
     protected static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Logger logger = LoggerFactory.getLogger(PropertyObject.class);
 
     @JsonProperty("properties")
     protected JsonNode propertiesJson;
     @JsonIgnore
-    protected Map<String, Object> properties;
+    protected Map<String, Object> properties = new HashMap<>();
     @JsonIgnore
     protected Set<String> propertiesDateFields = new HashSet<>();
     @JsonIgnore
@@ -39,7 +42,9 @@ public class PropertyObject {
 
     public void setPropertiesJson(JsonNode propertiesJson) {
         this.propertiesJson = propertiesJson;
-        this.properties = null;
+        this.properties = deserializeProperties(propertiesJson, propertiesDateFields);
+        logger.debug("Set propertiesJson: " + propertiesJson);
+        logger.debug("Deserialized properties: " + properties);
     }
 
     public void setPropertiesJsonString(String propertiesString) throws JsonProcessingException {
@@ -50,6 +55,7 @@ public class PropertyObject {
     public Map<String, Object> getProperties() {
         if (properties == null && propertiesJson != null) {
             properties = deserializeProperties(propertiesJson, propertiesDateFields);
+            logger.debug("Deserialized properties in getProperties(): " + properties);
         }
         return properties;
     }
@@ -57,6 +63,8 @@ public class PropertyObject {
     public void setProperties(Map<String, Object> properties) {
         this.properties = properties;
         this.propertiesJson = objectMapper.valueToTree(properties);
+        logger.debug("Set properties: " + properties);
+        logger.debug("Set propertiesJson: " + propertiesJson);
     }
 
     public String getPropertiesAsString() throws JsonProcessingException {
@@ -69,12 +77,13 @@ public class PropertyObject {
 
     public <T> T getProperty(String property, T defaultValue) {
         T propVal = (T) getProperties().get(property);
-        return (null==propVal) ? defaultValue : propVal;
+        return (null == propVal) ? defaultValue : propVal;
     }
 
     @JsonAnySetter
     public void setAdditionalAttributes(String key, JsonNode value) {
         additionalAttributes.put(key, value);
+        logger.debug("Set additional attribute: key=" + key + ", value=" + value);
     }
 
     @JsonAnyGetter
@@ -83,8 +92,8 @@ public class PropertyObject {
     }
 
     public void setAdditionalAttributes(String additionalAttributes) throws JsonProcessingException {
-        this.additionalAttributes = objectMapper.readValue(additionalAttributes, new TypeReference<>() {
-        });
+        this.additionalAttributes = objectMapper.readValue(additionalAttributes, new TypeReference<>() {});
+        logger.debug("Set additionalAttributes from string: " + additionalAttributes);
     }
 
     public String getAdditionalAttributesAsString() throws JsonProcessingException {
@@ -108,11 +117,12 @@ public class PropertyObject {
                 properties.put(fieldName, convertNode(fieldValue));
             }
         }
+        logger.debug("Deserialized properties: " + properties);
         return properties;
     }
 
     protected Object convertNode(JsonNode node) {
-        if (null == node) return null;
+        if (node == null) return null;
         if (node.isNumber()) {
             return node.numberValue();
         } else if (node.isBoolean()) {
@@ -142,5 +152,10 @@ public class PropertyObject {
         PropertyObject that = (PropertyObject) o;
         return Objects.equals(propertiesJson, that.propertiesJson) &&
                 Objects.equals(additionalAttributes, that.additionalAttributes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(propertiesJson, additionalAttributes);
     }
 }

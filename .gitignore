@@ -41,3 +41,9 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+
+# Astra tools / scb
+*.zip
+*.gz
+cqlsh-astra
