@@ -65,21 +65,25 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
 
 ![image](img/06.png)
 
-[//]: # (## 🚀 Getting Started Paths:)
+## 🚀 Getting Started:
 
-[//]: # ()
+### Running on Gitpod
 
-[//]: # (*Make sure you've completed the [prerequisites]&#40;#prerequisites&#41; before starting this step*)
+1. Click the 'Open in Gitpod' link:
+   [![Open in IDE](https://gitpod.io/button/open-in-gitpod.svg)](https://anant-cassstac-l27jvndv2xl.ws-eu115.gitpod.io/)
 
-[//]: # ()
+2. Once your Gitpod workspace has loaded, you'll be asked to paste your DB credentials in the Gitpod terminal at the
+   bottom of the screen:
 
-[//]: # (- [Running on Gitpod]&#40;#running-on-gitpod&#41;)
+3. When the app is finished building, click the 'Open Browser' button on the bottom right of the screen:
 
-[//]: # ()
+4. You've successfully built a Spring Data Datastax application!
 
-[//]: # (### Running on Gitpod)
+<!--- ENDEXCLUDE --->
 
 ### Local Setup
+
+*Make sure you've completed the [prerequisites](#prerequisites) before starting this step*
 
 1. Prepare Java and maven to be the Right Version
    ```
