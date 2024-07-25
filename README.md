@@ -26,7 +26,7 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
 
    Install the Python version you need for CQLSH: Python2.7+ or Python 3.6+
 
-```
+   ```
    curl -O -L https://downloads.datastax.com/enterprise/cqlsh-astra.tar.gz
    curl -O  https://downloads.datastax.com/enterprise/cqlsh-astra-20221114-bin.tar.gz
    tar xvfz cqlsh-astra.tar.gz
@@ -74,10 +74,13 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
 
 2. Once your Gitpod workspace has loaded, you'll be asked to paste your DB credentials in the Gitpod terminal at the
    bottom of the screen:
+   ![img.png](img/07.png)
 
 3. When the app is finished building, click the 'Open Browser' button on the bottom right of the screen:
 
+   ![img.png](img/08.png)
 4. You've successfully built a Spring Data Datastax application!
+   ![img.png](img/09.png)
 
 <!--- ENDEXCLUDE --->
 
