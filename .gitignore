@@ -50,6 +50,7 @@ cqlsh-astra
 
 ### Logs 
 *.log 
+*.tmp
 
 ### ingest data
 *.json

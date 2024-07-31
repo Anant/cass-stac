@@ -93,7 +93,7 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
    sdk list java
    sdk install java 17.0.12-amzn
    sdk list maven
-   sdk install maven 3.9.85. 
+   sdk install maven 3.9.8
    ```
 2. Update the right config [properties files](src/main/resources/application.properties) with the Database credentials
    ```

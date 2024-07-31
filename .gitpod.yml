@@ -1,7 +1,8 @@
 tasks:
   - init: |
       (
-       sdk install java 17.0.4.1-tem < /dev/null
+       sdk install java 17.0.12-amzn < /dev/null
+       sdk install maven 3.9.8 < /dev/null    
        curl -Ls "https://dtsx.io/get-astra-cli" | bash
        pyenv install 3.8.16 -f
        pyenv global 3.8.16
