@@ -5,6 +5,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 # pip install futures if you are on Python 2.7
 
+print("Upload batch script")
 # Define the API endpoint and headers
 url = 'http://localhost:8080/item/batch'
 headers = {
@@ -13,7 +14,7 @@ headers = {
 }
 
 # Path to the JSON file
-file_path = '/home/jsbilgi/cass-stac/qv-toa-2023-1M.json'
+file_path = '/workspace/cass-stac/qv-toa-2023-1M.json'
 
 # Path to the progress file
 progress_file_path = 'progress.log'

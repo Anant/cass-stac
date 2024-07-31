@@ -47,3 +47,9 @@ build/
 *.zip
 *.gz
 cqlsh-astra
+
+### Logs 
+*.log 
+
+### ingest data
+*.json
