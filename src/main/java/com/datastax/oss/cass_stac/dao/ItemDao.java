@@ -1,15 +1,12 @@
 package com.datastax.oss.cass_stac.dao;
 
-import com.datastax.oss.cass_stac.entity.Feature;
+import com.datastax.oss.cass_stac.entity.Item;
+import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
 import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.data.cassandra.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.datastax.oss.cass_stac.entity.Item;
-import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
-
-import java.time.Instant;
 import java.util.List;
 
 @Repository

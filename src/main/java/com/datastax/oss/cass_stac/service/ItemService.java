@@ -1,16 +1,17 @@
 package com.datastax.oss.cass_stac.service;
 
+import com.datastax.oss.cass_stac.dao.GeoPartition;
+import com.datastax.oss.cass_stac.dao.GeoTimePartition;
 import com.datastax.oss.cass_stac.dao.ItemDao;
 import com.datastax.oss.cass_stac.dao.ItemIdDao;
+import com.datastax.oss.cass_stac.dto.itemfeature.ItemDto;
 import com.datastax.oss.cass_stac.entity.Item;
 import com.datastax.oss.cass_stac.entity.ItemId;
 import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
+import com.datastax.oss.cass_stac.model.ImageResponse;
 import com.datastax.oss.cass_stac.model.ItemModelRequest;
 import com.datastax.oss.cass_stac.model.ItemModelResponse;
-import com.datastax.oss.cass_stac.dto.itemfeature.ItemDto;
 import com.datastax.oss.cass_stac.util.GeoJsonParser;
-//import com.datastax.oss.cass_stac.util.GeoTimePartition;
-import com.datastax.oss.cass_stac.dao.GeoTimePartition;
 import com.datastax.oss.cass_stac.util.GeometryUtil;
 import com.datastax.oss.cass_stac.util.PropertyUtil;
 import com.datastax.oss.driver.api.core.data.CqlVector;
@@ -20,6 +21,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -29,10 +31,7 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -221,4 +220,74 @@ public class ItemService {
     private ItemModelRequest parseNewGeoJson(String geoJson) throws JsonProcessingException {
         return objectMapper.readValue(geoJson, ItemModelRequest.class);
     }
+
+    public ImageResponse getPartitions(
+            ItemModelRequest request,
+            Optional<OffsetDateTime> minDate,
+            Optional<OffsetDateTime> maxDate,
+            List<String> objectTypeFilter,
+            String whereClause,
+            Object bindVars,
+            Boolean useCentroid,
+            Boolean filterObjectsByPolygon,
+            Boolean includeObjects) {
+        if (maxDate.isEmpty() && minDate.isPresent()) maxDate = Optional.of(minDate.get().withHour(23)
+                .withMinute(59)
+                .withSecond(59)
+                .withNano(999_999_999));
+
+        List<String> partitions = switch (request.getGeometry().getGeometryType()) {
+            case "Point" ->
+                    getPointPartitions(request, minDate, maxDate, objectTypeFilter, whereClause, bindVars, useCentroid, filterObjectsByPolygon);
+            case "Polygon" ->
+                    getPolygonPartitions(request, minDate, maxDate, objectTypeFilter, whereClause, bindVars, useCentroid, filterObjectsByPolygon);
+            default -> throw new IllegalStateException("Unexpected value: " + request.getGeometry().getGeometryType());
+        };
+        Optional<List<Item>> items = includeObjects
+                ? Optional.of(partitions.stream()
+                .flatMap(partition -> itemDao.findItemByPartitionId(partition).stream())
+                .toList())
+                : Optional.empty();
+
+        return new ImageResponse(partitions, partitions.size(), items);
+    }
+
+    private List<String> getPointPartitions(
+            ItemModelRequest request,
+            Optional<OffsetDateTime> minDate,
+            Optional<OffsetDateTime> maxDate,
+            List<String> objectTypeFilter,
+            String whereClause,
+            Object bindVars,
+            Boolean useCentroid,
+            Boolean filterObjectsByPolygon) {
+        final int geoResolution = 6;
+        final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
+
+        Geometry geometry = request.getGeometry();
+        Point point = geometry.getFactory().createPoint(geometry.getCoordinate());
+        return Collections.singletonList(minDate.isPresent()
+                ? new GeoTimePartition(geoResolution, timeResolution).getGeoTimePartitionForPoint(point, minDate.get())
+                : new GeoPartition(geoResolution).getGeoPartitionForPoint(point));
+    }
+
+    private List<String> getPolygonPartitions(
+            ItemModelRequest request,
+            Optional<OffsetDateTime> minDate,
+            Optional<OffsetDateTime> maxDate,
+            List<String> objectTypeFilter,
+            String whereClause,
+            Object bindVars,
+            Boolean useCentroid,
+            Boolean filterObjectsByPolygon) {
+        final int geoResolution = 6;
+        final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
+
+        Geometry geometry = request.getGeometry();
+        Polygon polygon = geometry.getFactory().createPolygon(geometry.getCoordinates());
+        return (maxDate.isPresent() && minDate.isPresent()) ? new GeoTimePartition(geoResolution, timeResolution)
+                .getGeoTimePartitions(polygon, minDate.get(), maxDate.get()) : new GeoPartition(geoResolution).getGeoPartitions(polygon);
+
+    }
+
 }

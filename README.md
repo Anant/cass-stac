@@ -70,7 +70,7 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
 ### Running on Gitpod
 
 1. Click the 'Open in Gitpod' link:
-   [![Open in IDE](https://gitpod.io/button/open-in-gitpod.svg)](https://anant-cassstac-l27jvndv2xl.ws-eu115.gitpod.io/)
+   [![Open in IDE](https://gitpod.io/button/open-in-gitpod.svg)](https://anant-cassstac-cngps3ptqta.ws-eu115.gitpod.io/)
 
 2. Once your Gitpod workspace has loaded, you'll be asked to paste your DB credentials in the Gitpod terminal at the
    bottom of the screen:
@@ -105,7 +105,7 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
 3. Compile and Run
    ```
    mvn compile
-   mvn package
+   mvn package -DskipTests=true
    mvn spring-boot:run
    ```   
 4. Hit http://localhost:8080/swagger-ui/index.html#/ and start using the API

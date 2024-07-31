@@ -17,7 +17,7 @@ public class GeoJsonItemRequest extends PropertyObject {
     private static final Logger logger = LoggerFactory.getLogger(GeoJsonItemRequest.class);
 
     @JsonProperty("type")
-    private static final String TYPE = "Feature";
+    private static final String TYPE = "Item";
 
     static {
         objectMapper.registerModule(new JtsModule(ConfigManager.getInstance().getIntProperty("geojson.coordinateDecimalPlaces", 16)));

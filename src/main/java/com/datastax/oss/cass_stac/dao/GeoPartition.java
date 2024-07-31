@@ -4,6 +4,7 @@ import com.uber.h3core.H3Core;
 import com.uber.h3core.util.LatLng;
 import org.jetbrains.annotations.NotNull;
 import org.locationtech.jts.geom.*;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,11 +20,11 @@ public class GeoPartition {
     private final int resolution;
     private final GeometryFactory geometryFactory;
     private final int idBucketCount;
-    private H3Core h3;
+    private final H3Core h3;
 
     public GeoPartition(int resolution) {
         if (resolution < MIN_RESOLUTION || resolution > MAX_RESOLUTION) {
-            throw new IllegalArgumentException("Invalid resolution, must be integer from "+MIN_RESOLUTION+" to "+MAX_RESOLUTION+" (inclusive)");
+            throw new IllegalArgumentException("Invalid resolution, must be integer from " + MIN_RESOLUTION + " to " + MAX_RESOLUTION + " (inclusive)");
         }
         this.resolution = resolution;
         //this.idBucketCount = ConfigManager.getInstance().getIntProperty("database.partition.id_bucket_count", 1000000);
@@ -120,7 +121,7 @@ public class GeoPartition {
                 .toList();
     }
 
-    private  MultiPolygon asMultiPolygon(List<Long> cells) {
+    private MultiPolygon asMultiPolygon(List<Long> cells) {
         List<Polygon> polygons = asPolygons(cells);
         return new MultiPolygon(polygons.toArray(new Polygon[0]), geometryFactory);
     }
