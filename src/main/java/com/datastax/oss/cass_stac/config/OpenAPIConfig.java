@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springdoc.core.models.GroupedOpenApi;
 
 import java.util.List;
 
@@ -14,6 +15,14 @@ import java.util.List;
 public class OpenAPIConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenAPIConfig.class);
+
+    @Bean
+    public GroupedOpenApi publicApi() {
+        return GroupedOpenApi.builder()
+                .group("public")
+                .pathsToMatch("/**")
+                .build();
+    }
 
     @Bean
     public OpenAPI customOpenAPI() {
