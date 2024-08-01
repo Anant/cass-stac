@@ -4,23 +4,31 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-
+import org.springframework.dao.QueryTimeoutException;
 
 import com.datastax.oss.cass_stac.config.DataStaxAstraProperties;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.CqlSessionBuilder;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @SpringBootApplication
 @EnableConfigurationProperties(DataStaxAstraProperties.class)
 @RequiredArgsConstructor
+@Slf4j
 public class App implements CommandLineRunner{
 	
 	private final CqlSessionBuilder cqlSessionBuilder;
 
 	public static void main(String[] args) {
 		SpringApplication.run(App.class, args);
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+			@Override
+                public void run() {
+                    System.out.println("Shutting down the application");
+                }
+		}));
 	}
 
 	@Override
@@ -86,8 +94,16 @@ public class App implements CommandLineRunner{
 		CqlSession cqlSession = cqlSessionBuilder.build();
 		
 		// Execute for Table
-		
-		cqlSession.execute(item_create_table_statement);
+		try {
+			cqlSession.execute(item_create_table_statement);
+			log.info("Item table created or exists");
+		} catch (QueryTimeoutException ex) {
+			log.error(ex.getLocalizedMessage());
+			System.exit(1);
+		} catch(Exception ex) {
+			log.error(ex.getLocalizedMessage());
+			System.exit(1);
+		}
 		cqlSession.execute(itemids_create_table_statement);
 		cqlSession.execute(feature_create_table_statement);
 		cqlSession.execute(feature_collection_create_table_statement);	
