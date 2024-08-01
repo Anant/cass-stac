@@ -21,7 +21,8 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/item-collection")
-@Tag(name = "Item Collection", description = "The STAC Item to insert")
+@Tag(name = "Item Collection", description = "The STAC Item object is the most important object in a STAC system. An Item is the entity that contains metadata for a scene and links to the assets.\n\n" +
+        "Item objects are the leaf nodes for a graph of Catalog and Collection objects. See the overview document for more information about how these objects relate to each other.")
 @Schema(hidden = true)
 public class ItemCollectionController {
 
