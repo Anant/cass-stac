@@ -3,6 +3,7 @@ package com.datastax.oss.cass_stac.controller;
 import com.datastax.oss.cass_stac.model.FeatureModelResponse;
 import com.datastax.oss.cass_stac.service.FeatureService;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,8 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 @RestController
 @RequiredArgsConstructor
+@Hidden
 @RequestMapping("/feature")
 @Tag(name="Feature", description="The STAC Feature to insert and get")
 @Schema(hidden = true)

@@ -1,0 +1,7 @@
+urls:
+  - url: "/v3/api-docs"
+    name: "API"
+layout: "StandaloneLayout"
+docExpansion: "none"
+defaultModelExpandDepth: -1
+defaultModelsExpandDepth: -1

@@ -59,8 +59,8 @@ RUN curl -O https://downloads.datastax.com/enterprise/cqlsh-astra-20221114-bin.t
     mv cqlsh-astra /usr/local/bin
 
 # Invalidate cache for Git repository download
-ADD https://api.github.com/repos/Anant/cass-stac/git/refs/heads/feature/spring-restapi version.json
-RUN rm -rf /app && mkdir -p /app && git clone -b feature/spring-restapi https://github.com/Anant/cass-stac.git /app
+ADD https://api.github.com/repos/Anant/cass-stac/git/refs/heads/main version.json
+RUN rm -rf /app && mkdir -p /app && git clone -b main https://github.com/Anant/cass-stac.git /app
 
 # Create and set the working directory
 WORKDIR /app

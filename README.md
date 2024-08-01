@@ -117,3 +117,66 @@ $CQLSH_PATH/bin/cqlsh \
 -p <password> \
 -b ./secure-connect-cass5-stac.zip
 ```
+## 🚀 Getting Started:
+
+### Running on Docker
+#### Prerequisites
+    Docker installed on your system.
+    Basic knowledge of Docker and command-line interface.
+#### Files in the Repository
+    Dockerfile: Contains the instructions to build the Docker image.
+    dockerignore: Lists files and directories to be ignored by Docker.
+    dockersetup.sh: Shell script to set up the Docker environment and download SCB from Astra.
+### 1. Clone the Repository
+   Clone the repository containing these files to your local machine.
+   ![img.png](img/Git clone.png)
+
+### 2. Build the Docker Image
+   Use the Dockerfile to build the Docker image. Run the following command in the directory containing the Dockerfile.
+   Command would run dockersetup.sh internally and setup environmental variables
+   ```
+      sudo docker build -t container_name \
+      --build-arg ASTRA_DB_USERNAME=token \
+      --build-arg ASTRA_DB_KEYSPACE=keyspace_name \
+      --build-arg ASTRA_DB_ID=astra_database_id \
+      --build-arg DATASTAX_ASTRA_PASSWORD=Astra_application_password \
+      --build-arg DATASTAX_ASTRA_SCB_NAME=SCB.zip \
+      .
+   ```
+   ![img.png](img/Docker Build.png)
+
+### 3. On successful completion, out put of build command would be like below
+   ![img.png](img/Docker build command output.png)
+
+### 4. Access the Application
+   Once the container is running, you can access the application using the URL and port specified while building container.
+   Below is the command to start docker container.
+   ```
+      docker run -p port_no:port_no \
+      -e SERVER_PORT=8080 \
+      -e ASTRA_DB_USERNAME=token \
+      -e ASTRA_DB_KEYSPACE=keyspace_name \
+      -e ASTRA_DB_ID=astra_database_id \
+      -e DATASTAX_ASTRA_PASSWORD=Astra_application_password \
+      -e DATASTAX_ASTRA_SCB_NAME=SCB.zip \
+      container_name
+   ```
+   ![img.png](img/Docker run command.png)
+
+#### 5. If docker run command is successful and application is started, output would be like below
+   ![img.png](img/Docker run command output.png)
+
+#### 6. Use browser to access application using bleow url
+      ```
+      http://localhost:8080/swagger-ui/index.html#/
+      UI wold be like below
+      ```
+   ![img.png](img/09.png)
+
+#### 7. \[Optional] Connect to the DB from the command line
+      ```
+      $CQLSH_PATH/bin/cqlsh \
+      -u token \
+      -p <password> \
+      -b ./SCB.zip
+      ```

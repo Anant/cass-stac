@@ -2,6 +2,8 @@ package com.datastax.oss.cass_stac.controller;
 
 import com.datastax.oss.cass_stac.dto.collection.CollectionDto;
 import com.datastax.oss.cass_stac.service.CollectionService;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,8 +17,10 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
+@Hidden
 @RequestMapping("/feature-collection")
 @Tag(name = "Feature Collection", description = "The STAC Features to insert")
+@Schema(hidden = true)
 public class FeatureCollectionController {
 
     @Autowired
