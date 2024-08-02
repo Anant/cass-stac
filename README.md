@@ -57,9 +57,11 @@ We're using Spring Data Cassandra and Datastax Astra DB to build a REST API that
    ```
 
 #### GET /item
-   ![image](img/Item Get.png)
+
+![image](img/Item_get.png)
 
 ### Item-Collection
+#### POST /item-collection
    ```
 {
     "id": "20230130_010126_SN24_QUICKVIEW_VISUAL_1_1_3_SATL-2KM-55S_308_5798",
