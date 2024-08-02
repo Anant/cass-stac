@@ -13,7 +13,7 @@ Run a REST API that connects to DataStax Astra DB
 
 We're using Spring Data Cassandra and Datastax Astra DB to build a REST API that stores STAC items and features.
 
-## Data sample that can be used for inserting and retrieving items are features
+## Data sample that can be used for inserting and retrieving items and features
     Click on end points to perform GET or POST action. Click on "Try it out" button to key in 
     input data
 ### Item
