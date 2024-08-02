@@ -26,8 +26,8 @@ import java.util.Optional;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/item")
-@Tag(name = "Item", description = "The STAC Item object is the most important object in a STAC system. An Item is the entity that contains metadata for a scene and links to the assets.\n\n" +
-        "Item objects are the leaf nodes for a graph of Catalog and Collection objects. See the overview document for more information about how these objects relate to each other.")
+@Tag(name = "Item", description = "The STAC Item object is the most important object in a STAC system. An Item is the entity that contains metadata for a scene and links to the assets.\n" +
+        "Item objects are the leaf nodes for a graph of Catalog and Collection objects.")
 @Schema(hidden = true)
 public class ItemController {
 
@@ -70,7 +70,7 @@ public class ItemController {
         }
     }
 
-    @Operation(description = "Get method to fetch Item data based on Partition id and ID")
+    @Operation(description = "Get method to fetch Item data based on item ID")
     @GetMapping
     public ResponseEntity<?> getItem(@RequestParam final String id) {
         try {
