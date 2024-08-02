@@ -70,7 +70,7 @@ public class ItemController {
         }
     }
 
-    @Operation(description = "Get method to fetch Item data based on Partition id and ID")
+    @Operation(description = "Get method to fetch Item data based on item ID")
     @GetMapping
     public ResponseEntity<?> getItem(@RequestParam final String id) {
         try {
