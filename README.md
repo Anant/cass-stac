@@ -51,8 +51,311 @@ We're using Spring Data Cassandra and Datastax Astra DB to build a REST API that
    ![image](img/Item Request Body.png)
 
 #### POST /item/images
+   For polygon
    ```
    {
+      "id": "20230130_010126_SN24_QUICKVIEW_VISUAL_1_1_3_SATL-2KM-55S_308_5798",
+      "geometry": {
+         "type": "Polygon",
+         "crs": {
+               "type": "name",
+               "properties": {
+                  "name": "EPSG:4326"
+               }
+         },
+         "coordinates": [
+               [
+                  [
+                     144.81543,
+                     -37.927299
+                  ],
+                  [
+                     144.814896,
+                     -37.945313
+                  ],
+                  [
+                     144.83763,
+                     -37.945733
+                  ],
+                  [
+                     144.838158,
+                     -37.927719
+                  ],
+                  [
+                     144.81543,
+                     -37.927299
+                  ]
+               ]
+         ]
+      },
+      "collection": "quickview-visual",
+      "datetime": "2023-01-30T01:01:30.760099+00:00",
+      "end_datetime": "2023-01-30T01:01:30.760099+00:00",
+      "content": {
+         "bbox": [
+               144.814896,
+               -37.945733,
+               144.838158,
+               -37.927299
+         ],
+         "links": [],
+         "assets": {
+               "cloud": {
+                  "href": "s3://satellogic-production-eo-backend-catalog/QUICKVIEW_CLOUD/88d2d7ad-1ee6-40cf-b68e-52f5ff828ecb--112813/20230130_010126_SN24_QUICKVIEW_CLOUD_1_1_3_SATL-2KM-55S_308_5798.tif",
+                  "type": "image/tiff; application=geotiff;",
+                  "roles": [
+                     "cloud"
+                  ]
+               },
+               "preview": {
+                  "href": "s3://satellogic-production-eo-backend-catalog/QUICKVIEW_VISUAL/88d2d7ad-1ee6-40cf-b68e-52f5ff828ecb--112813/20230130_010126_SN24_QUICKVIEW_VISUAL_1_1_3_SATL-2KM-55S_308_5798_preview.png",
+                  "type": "image/png",
+                  "roles": [
+                     "overview"
+                  ]
+               },
+               "analytic": {
+                  "href": "s3://satellogic-production-eo-backend-catalog/QUICKVIEW_VISUAL/88d2d7ad-1ee6-40cf-b68e-52f5ff828ecb--112813/20230130_010126_SN24_QUICKVIEW_VISUAL_1_1_3_SATL-2KM-55S_308_5798.tif",
+                  "type": "image/tiff; application=geotiff;",
+                  "roles": [
+                     "data"
+                  ],
+                  "eo:bands": [
+                     {
+                           "name": "Red",
+                           "common_name": "red"
+                     },
+                     {
+                           "name": "Green",
+                           "common_name": "green"
+                     },
+                     {
+                           "name": "Blue",
+                           "common_name": "blue"
+                     },
+                     {
+                           "name": "NIR",
+                           "common_name": "nir"
+                     }
+                  ]
+               },
+               "thumbnail": {
+                  "href": "s3://satellogic-production-eo-backend-catalog/QUICKVIEW_VISUAL/88d2d7ad-1ee6-40cf-b68e-52f5ff828ecb--112813/20230130_010126_SN24_QUICKVIEW_VISUAL_1_1_3_SATL-2KM-55S_308_5798_thumbnail.png",
+                  "type": "image/png",
+                  "roles": [
+                     "thumbnail"
+                  ]
+               }
+         },
+         "properties": {
+               "gsd": 1.24,
+               "datetime": "2023-01-30T01:01:30.760099328+00:00",
+               "platform": "newsat24",
+               "grid:code": "SATL-2KM-55S_308_5798",
+               "proj:epsg": 32755,
+               "proj:shape": [
+                  1613,
+                  1612
+               ],
+               "eo:cloud_cover": 73.0,
+               "proj:transform": [
+                  1.24,
+                  0.0,
+                  307999.88,
+                  0.0,
+                  -1.24,
+                  5800000.8,
+                  0.0,
+                  0.0,
+                  1.0
+               ],
+               "view:off_nadir": 23.2014,
+               "satl:outcome_id": "88d2d7ad-1ee6-40cf-b68e-52f5ff828ecb--112813",
+               "satl:ground_lock": false,
+               "satl:valid_pixel": 0.153,
+               "view:sun_azimuth": 51.5664,
+               "satl:product_name": "QUICKVIEW_VISUAL",
+               "satl:shadow_cover": 1.9,
+               "satl:ba_nir_radial": 1.146,
+               "satl:ba_nir_xshift": -1.139,
+               "satl:ba_nir_yshift": -0.123,
+               "satl:ba_red_radial": 2.964,
+               "satl:ba_red_xshift": -2.964,
+               "satl:ba_red_yshift": -0.005,
+               "view:sun_elevation": 61.6236,
+               "satl:ba_blue_radial": 0.82,
+               "satl:ba_blue_xshift": 0.019,
+               "satl:ba_blue_yshift": 0.82,
+               "satl:transaction_id": "rr-to-stac-vh9c7",
+               "satl:ba_nir_response": 0.601,
+               "satl:ba_red_response": 0.645,
+               "satl:product_version": "1.1.3",
+               "satl:ba_blue_response": 0.492,
+               "satl:geoaccuracy_red_radial": 105.189,
+               "satl:geoaccuracy_red_xshift": -71.555,
+               "satl:geoaccuracy_red_yshift": 77.101,
+               "satl:geoaccuracy_blue_radial": 171.945,
+               "satl:geoaccuracy_blue_xshift": 171.944,
+               "satl:geoaccuracy_blue_yshift": -0.237,
+               "satl:geoaccuracy_green_radial": 1.821,
+               "satl:geoaccuracy_green_xshift": 0.364,
+               "satl:geoaccuracy_green_yshift": 1.784,
+               "satl:geoaccuracy_red_response": 0.134,
+               "satl:geoaccuracy_blue_response": -0.045,
+               "satl:geoaccuracy_green_response": 0.174
+         },
+         "stac_extensions": [
+               "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+               "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
+               "https://stac-extensions.github.io/view/v1.0.0/schema.json",
+               "https://stac-extensions.github.io/grid/v1.1.0/schema.json"
+         ]
+      },
+      "private": null
+   }
+   ```
+   
+   For point
+   ```
+   {
+      "id": "20230130_010126_SN24_QUICKVIEW_VISUAL_1_1_3_SATL-2KM-55S_308_5798",
+      "geometry": {
+         "type": "Point",
+         "crs": {
+               "type": "name",
+               "properties": {
+                  "name": "EPSG:4326"
+               }
+         },
+         "coordinates": [
+                     144.81543,
+                     -37.927299
+         ]
+      },
+      "collection": "quickview-visual",
+      "datetime": "2023-01-30T01:01:30.760099+00:00",
+      "end_datetime": "2023-01-30T01:01:30.760099+00:00",
+      "content": {
+         "bbox": [
+               144.814896,
+               -37.945733,
+               144.838158,
+               -37.927299
+         ],
+         "links": [],
+         "assets": {
+               "cloud": {
+                  "href": "s3://satellogic-production-eo-backend-catalog/QUICKVIEW_CLOUD/88d2d7ad-1ee6-40cf-b68e-52f5ff828ecb--112813/20230130_010126_SN24_QUICKVIEW_CLOUD_1_1_3_SATL-2KM-55S_308_5798.tif",
+                  "type": "image/tiff; application=geotiff;",
+                  "roles": [
+                     "cloud"
+                  ]
+               },
+               "preview": {
+                  "href": "s3://satellogic-production-eo-backend-catalog/QUICKVIEW_VISUAL/88d2d7ad-1ee6-40cf-b68e-52f5ff828ecb--112813/20230130_010126_SN24_QUICKVIEW_VISUAL_1_1_3_SATL-2KM-55S_308_5798_preview.png",
+                  "type": "image/png",
+                  "roles": [
+                     "overview"
+                  ]
+               },
+               "analytic": {
+                  "href": "s3://satellogic-production-eo-backend-catalog/QUICKVIEW_VISUAL/88d2d7ad-1ee6-40cf-b68e-52f5ff828ecb--112813/20230130_010126_SN24_QUICKVIEW_VISUAL_1_1_3_SATL-2KM-55S_308_5798.tif",
+                  "type": "image/tiff; application=geotiff;",
+                  "roles": [
+                     "data"
+                  ],
+                  "eo:bands": [
+                     {
+                           "name": "Red",
+                           "common_name": "red"
+                     },
+                     {
+                           "name": "Green",
+                           "common_name": "green"
+                     },
+                     {
+                           "name": "Blue",
+                           "common_name": "blue"
+                     },
+                     {
+                           "name": "NIR",
+                           "common_name": "nir"
+                     }
+                  ]
+               },
+               "thumbnail": {
+                  "href": "s3://satellogic-production-eo-backend-catalog/QUICKVIEW_VISUAL/88d2d7ad-1ee6-40cf-b68e-52f5ff828ecb--112813/20230130_010126_SN24_QUICKVIEW_VISUAL_1_1_3_SATL-2KM-55S_308_5798_thumbnail.png",
+                  "type": "image/png",
+                  "roles": [
+                     "thumbnail"
+                  ]
+               }
+         },
+         "properties": {
+               "gsd": 1.24,
+               "datetime": "2023-01-30T01:01:30.760099328+00:00",
+               "platform": "newsat24",
+               "grid:code": "SATL-2KM-55S_308_5798",
+               "proj:epsg": 32755,
+               "proj:shape": [
+                  1613,
+                  1612
+               ],
+               "eo:cloud_cover": 73.0,
+               "proj:transform": [
+                  1.24,
+                  0.0,
+                  307999.88,
+                  0.0,
+                  -1.24,
+                  5800000.8,
+                  0.0,
+                  0.0,
+                  1.0
+               ],
+               "view:off_nadir": 23.2014,
+               "satl:outcome_id": "88d2d7ad-1ee6-40cf-b68e-52f5ff828ecb--112813",
+               "satl:ground_lock": false,
+               "satl:valid_pixel": 0.153,
+               "view:sun_azimuth": 51.5664,
+               "satl:product_name": "QUICKVIEW_VISUAL",
+               "satl:shadow_cover": 1.9,
+               "satl:ba_nir_radial": 1.146,
+               "satl:ba_nir_xshift": -1.139,
+               "satl:ba_nir_yshift": -0.123,
+               "satl:ba_red_radial": 2.964,
+               "satl:ba_red_xshift": -2.964,
+               "satl:ba_red_yshift": -0.005,
+               "view:sun_elevation": 61.6236,
+               "satl:ba_blue_radial": 0.82,
+               "satl:ba_blue_xshift": 0.019,
+               "satl:ba_blue_yshift": 0.82,
+               "satl:transaction_id": "rr-to-stac-vh9c7",
+               "satl:ba_nir_response": 0.601,
+               "satl:ba_red_response": 0.645,
+               "satl:product_version": "1.1.3",
+               "satl:ba_blue_response": 0.492,
+               "satl:geoaccuracy_red_radial": 105.189,
+               "satl:geoaccuracy_red_xshift": -71.555,
+               "satl:geoaccuracy_red_yshift": 77.101,
+               "satl:geoaccuracy_blue_radial": 171.945,
+               "satl:geoaccuracy_blue_xshift": 171.944,
+               "satl:geoaccuracy_blue_yshift": -0.237,
+               "satl:geoaccuracy_green_radial": 1.821,
+               "satl:geoaccuracy_green_xshift": 0.364,
+               "satl:geoaccuracy_green_yshift": 1.784,
+               "satl:geoaccuracy_red_response": 0.134,
+               "satl:geoaccuracy_blue_response": -0.045,
+               "satl:geoaccuracy_green_response": 0.174
+         },
+         "stac_extensions": [
+               "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+               "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
+               "https://stac-extensions.github.io/view/v1.0.0/schema.json",
+               "https://stac-extensions.github.io/grid/v1.1.0/schema.json"
+         ]
+      },
+      "private": null
    }
    ```
 
