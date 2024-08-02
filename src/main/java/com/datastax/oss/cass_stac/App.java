@@ -97,6 +97,20 @@ public class App implements CommandLineRunner{
 		try {
 			cqlSession.execute(item_create_table_statement);
 			log.info("Item table created or exists");
+			cqlSession.execute(itemids_create_table_statement);
+			log.info("Item_ids table created or exists");
+			cqlSession.execute(feature_create_table_statement);
+			log.info("Feature table created or exists");
+			cqlSession.execute(feature_collection_create_table_statement);
+			log.info("Feature_collection table created or exists");
+			
+			// Execute for Indexes
+			cqlSession.execute(item_datetime_create_index_statement);
+			log.info("Item_datetime index created or exists");
+			cqlSession.execute(item_properties_datetime_create_index_statement);
+			log.info("Item_properties_datetime index created or exists");
+			cqlSession.execute(item_centroid_create_index_statement);
+			log.info("Item_centroid index created or exists");
 		} catch (QueryTimeoutException ex) {
 			log.error(ex.getLocalizedMessage());
 			System.exit(1);
@@ -104,14 +118,7 @@ public class App implements CommandLineRunner{
 			log.error(ex.getLocalizedMessage());
 			System.exit(1);
 		}
-		cqlSession.execute(itemids_create_table_statement);
-		cqlSession.execute(feature_create_table_statement);
-		cqlSession.execute(feature_collection_create_table_statement);	
 		
-		// Execute for Indexes
-		cqlSession.execute(item_datetime_create_index_statement);
-		cqlSession.execute(item_properties_datetime_create_index_statement);
-		cqlSession.execute(item_centroid_create_index_statement);
 	}
 
 }
