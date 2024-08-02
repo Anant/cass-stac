@@ -96,21 +96,21 @@ public class App implements CommandLineRunner{
 		// Execute for Table
 		try {
 			cqlSession.execute(item_create_table_statement);
-			log.info("Item table created or exists");
+			log.info("Verification of Item table is successful");
 			cqlSession.execute(itemids_create_table_statement);
-			log.info("Item_ids table created or exists");
+			log.info("Verification of Item_ids table is successful");
 			cqlSession.execute(feature_create_table_statement);
-			log.info("Feature table created or exists");
+			log.info("Verification of Feature table is successful");
 			cqlSession.execute(feature_collection_create_table_statement);
-			log.info("Feature_collection table created or exists");
+			log.info("Feature_collection table is validated");
 			
 			// Execute for Indexes
 			cqlSession.execute(item_datetime_create_index_statement);
-			log.info("Item_datetime index created or exists");
+			log.info("Verification of Item_datetime index is verified");
 			cqlSession.execute(item_properties_datetime_create_index_statement);
-			log.info("Item_properties_datetime index created or exists");
+			log.info("Verification of Item_properties_datetime index is success");
 			cqlSession.execute(item_centroid_create_index_statement);
-			log.info("Item_centroid index created or exists");
+			log.info("Verification of Item_centroid index is successful");
 		} catch (QueryTimeoutException ex) {
 			log.error(ex.getLocalizedMessage());
 			System.exit(1);
