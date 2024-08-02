@@ -102,13 +102,13 @@ public class App implements CommandLineRunner{
 			cqlSession.execute(feature_create_table_statement);
 			log.info("Verification of Feature table is successful");
 			cqlSession.execute(feature_collection_create_table_statement);
-			log.info("Feature_collection table is validated");
+			log.info("Verification of Feature_collection table is successful");
 			
 			// Execute for Indexes
 			cqlSession.execute(item_datetime_create_index_statement);
-			log.info("Verification of Item_datetime index is verified");
+			log.info("Verification of Item_datetime index is successful");
 			cqlSession.execute(item_properties_datetime_create_index_statement);
-			log.info("Verification of Item_properties_datetime index is success");
+			log.info("Verification of Item_properties_datetime index is successful");
 			cqlSession.execute(item_centroid_create_index_statement);
 			log.info("Verification of Item_centroid index is successful");
 		} catch (QueryTimeoutException ex) {
