@@ -48,7 +48,8 @@ We're using Spring Data Cassandra and Datastax Astra DB to build a REST API that
    }
    ```
    Copy and past above string in  put box and make necessary changes. It would be like below.
-   ![image](img/Item Request Body.png)
+
+![image](img/Item_Request_Body.png)
 
 #### POST /item/images
    For polygon
@@ -618,7 +619,8 @@ $CQLSH_PATH/bin/cqlsh \
     dockersetup.sh: Shell script to set up the Docker environment and download SCB from Astra.
 ### 1. Clone the Repository
    Clone the repository containing these files to your local machine.
-   ![img.png](img/Git clone.png)
+
+   ![img.png](img/Git_clone.png)
 
 ### 2. Build the Docker Image
    Use the Dockerfile to build the Docker image. Run the following command in the directory containing the Dockerfile.
@@ -632,10 +634,11 @@ $CQLSH_PATH/bin/cqlsh \
       --build-arg DATASTAX_ASTRA_SCB_NAME=SCB.zip \
       .
    ```
-   ![img.png](img/Docker Build.png)
+![img.png](img/Docker_Build.png)
 
 ### 3. On successful completion, out put of build command would be like below
-   ![img.png](img/Docker build command output.png)
+
+![img.png](img/Docker_build_command_output.png)
 
 ### 4. Access the Application
    Once the container is running, you can access the application using the URL and port specified while building container.
@@ -650,10 +653,12 @@ $CQLSH_PATH/bin/cqlsh \
       -e DATASTAX_ASTRA_SCB_NAME=SCB.zip \
       container_name
    ```
-   ![img.png](img/Docker run command.png)
+
+![img.png](img/Docker_run_command.png)
 
 #### 5. If docker run command is successful and application is started, output would be like below
-   ![img.png](img/Docker run command output.png)
+
+![img.png](img/Docker_run_command_output.png)
 
 #### 6. Use browser to access application using bleow url
       ```
