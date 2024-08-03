@@ -86,13 +86,15 @@ public class ItemController {
     @Operation(description = "Fetch partitions from Item data given spatio-temporal data")
     @PostMapping("/images")
     public ResponseEntity<?> getImages(@RequestBody final ItemModelRequest request,
-                                       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<OffsetDateTime> minDate,
-                                       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<OffsetDateTime> maxDate,
+                                       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime minDate,
+                                       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime maxDate,
                                        @RequestParam(required = false) final List<String> objectTypeFilter,
                                        @RequestParam(required = false) final String whereClause,
                                        @RequestParam(required = false) final Object bindVars,
                                        @RequestParam(required = false, defaultValue = "false") final Boolean useCentroid,
                                        @RequestParam(required = false, defaultValue = "true") final Boolean filterObjectsByPolygon,
+                                       @RequestParam(required = false, defaultValue = "true") final Boolean includeIds,
+                                       @RequestParam(required = false, defaultValue = "true") final Boolean includeCount,
                                        @RequestParam(required = false, defaultValue = "false") final Boolean includeObjects) {
 
         final Map<String, String> message = new HashMap<>();
@@ -105,6 +107,8 @@ public class ItemController {
                     whereClause,
                     bindVars,
                     useCentroid,
+                    includeCount,
+                    includeIds,
                     filterObjectsByPolygon,
                     includeObjects);
             return new ResponseEntity<>(response, HttpStatus.OK);
