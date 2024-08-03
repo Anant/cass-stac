@@ -5,9 +5,13 @@ import java.util.Map;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Builder
 @Data
+@Getter
+@Setter
 public class ItemDto {
 	private String type;
 	private String stac_version;

@@ -13,8 +13,11 @@ import java.util.Optional;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ImageResponse {
-    private Optional<List<String>> partitions = Optional.empty();
-    private Optional<Integer> count = Optional.empty();
-    private Optional<List<Item>> items = Optional.empty();
+public class ItemSearchResponse {
+    private String type = "FeatureCollection";
+    private Optional<List<Item>> features;
+    private Optional<List<String>> partition_ids;
+    private Optional<Integer> numberMatched;
+    private Optional<Integer> numberReturned;
+
 }
