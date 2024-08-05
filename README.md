@@ -577,6 +577,11 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
 ### Local Setup
 
 *Make sure you've completed the [prerequisites](#prerequisites) before starting this step*
+*Additional prereuirments for local instalation*
+i   -> Ensure user is part of sudo group
+ii  -> Ensure git is installed Command : "sudo apt-get install git"
+iii -> Curl is installed -> Command :  "sudo apt-get install curl"
+iv  -> Install SDKMAN using https://gist.github.com/masudcsesust04/3c8ba2390fcd49e61851e92ea19907e2
 
 1. Prepare Java and maven to be the Right Version
    ```
@@ -585,21 +590,33 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
    sdk list maven
    sdk install maven 3.9.8
    ```
-2. Update the right config [properties files](src/main/resources/application.properties) with the Database credentials
+2. Download SCB using astra client. Below are the steps to download SCB
+   a -> Open new terminal
+   b -> Ensure astra client is installed -> Command : "astra help"
+   c -> Install astra client if above command fails. Refer [prerequisites] for installing astra client
+        after installation follow steps from point a [#a] above
+   d -> Login to astra db -> Command : "astra login -t your_astra_token_here"
+   e -> Download SCB -> Command : "astra db download-scb astra_database_id -f secure-connect-database.zip"
+   f -> exit from astra-cli terminal
+
+3. Clone cass-stac git repository -> Command : "git clone https://github.com/Anant/cass-stac.git"
+
+4. Update the right config [properties files](src/main/resources/application.properties) with the Database credentials
    ```
    datastax.astra.username=token
    datastax.astra.password=## FILL IN PASSWORD FROM Datastax's UI ##
    datastax.astra.keyspace=<keyspace>
-   datastax.astra.secure-connect-bundle=<secure-bundle-file.zip>
+   datastax.astra.secure-connect-bundle=secure-connect-database.zip
    ```
-3. Compile and Run
+5. Move SCB to resource directory -> Command : "mv secure-connect-database.zip src/main/resource/secure-connect-database.zip"
+6. Compile and Run -> Ensure current directory is cass-stac
    ```
    mvn compile
    mvn package -DskipTests=true
    mvn spring-boot:run
    ```   
-4. Hit http://localhost:8080/swagger-ui/index.html#/ and start using the API
-5. \[Optional] Connect to the DB from the command line
+7. Hit http://localhost:8080/swagger-ui/index.html#/ and start using the API
+8. \[Optional] Connect to the DB from the command line
 
 ```
 $CQLSH_PATH/bin/cqlsh \
