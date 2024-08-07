@@ -577,7 +577,13 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
 ### Local Setup
 
 *Make sure you've completed the [prerequisites](#prerequisites) before starting this step*
-
+   ```
+   *Additional prerequisites for local instalation*
+   i   -> Ensure user is part of sudo group
+   ii  -> Ensure git is installed. -> Command : "sudo apt-get install git"
+   iii -> Curl is installed. -> Command :  "sudo apt-get install curl"
+   iv  -> Install SDKMAN using https://gist.github.com/masudcsesust04/3c8ba2390fcd49e61851e92ea19907e2
+   ```
 1. Prepare Java and maven to be the Right Version
    ```
    sdk list java
@@ -585,21 +591,34 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
    sdk list maven
    sdk install maven 3.9.8
    ```
-2. Update the right config [properties files](src/main/resources/application.properties) with the Database credentials
+2. Download SCB using astra client. Below are the steps to download SCB
+   ```
+      a -> Open new terminal
+      b -> Ensure astra client is installed -> Command : "astra help"
+      c -> Install astra client if above command fails. Refer [prerequisites](#prerequisites) for installing astra client
+           after installation follow steps from point (#a)
+      d -> Login to astra db -> Command : "astra login -t your_astra_token_here"
+      e -> Download SCB -> Command : "astra db download-scb astra_database_id -f secure-connect-database.zip"
+      f -> exit from astra-cli terminal
+   ```
+3. Clone cass-stac git repository -> Command : "git clone https://github.com/Anant/cass-stac.git"
+
+4. Update the right config [properties files](src/main/resources/application.properties) with the Database credentials
    ```
    datastax.astra.username=token
    datastax.astra.password=## FILL IN PASSWORD FROM Datastax's UI ##
    datastax.astra.keyspace=<keyspace>
-   datastax.astra.secure-connect-bundle=<secure-bundle-file.zip>
+   datastax.astra.secure-connect-bundle=secure-connect-database.zip
    ```
-3. Compile and Run
+5. Move SCB to resource directory -> Command : "mv secure-connect-database.zip src/main/resource/secure-connect-database.zip"
+6. Compile and Run -> Ensure current directory is cass-stac
    ```
    mvn compile
    mvn package -DskipTests=true
    mvn spring-boot:run
    ```   
-4. Hit http://localhost:8080/swagger-ui/index.html#/ and start using the API
-5. \[Optional] Connect to the DB from the command line
+7. Hit http://localhost:8080/swagger-ui/index.html#/ and start using the API
+8. \[Optional] Connect to the DB from the command line
 
 ```
 $CQLSH_PATH/bin/cqlsh \
@@ -674,3 +693,54 @@ $CQLSH_PATH/bin/cqlsh \
       -p <password> \
       -b ./SCB.zip
       ```
+
+## 🚀 Getting Started:
+### Running on Dev Container
+#### Prerequisites
+    Docker installed on your system.
+    Basic knowledge of Docker and command-line interface.
+    Visual Studio
+#### Files in the Repository
+    Dockerfile: Contains the instructions to build the Docker image.
+    dockerignore: Lists files and directories to be ignored by Docker.
+    dockersetup.sh: Shell script to set up the Docker environment and download SCB from Astra.
+    setup_devcontainer.sh: Shell script to setup docker environment and create docker image
+    devcontainer.json: File required by Dev container
+### 1. Clone the Repository
+   Clone the repository containing these files to your local machine.
+
+   ![img.png](img/Git_clone.png)
+
+### 2. Build the Docker Image
+```
+   Open cass-stac folder using Visual Studio.
+   open a new terminal
+   chmod +x setup_devcontainer.sh
+   ./setup_devcontainer.sh
+   execution of above would prompt user to provide values for input parameters. Would start image building after parameters are provided.
+   It would be like below
+```
+
+   ![img.png](img/Setup_DevContainer_ouptut.png)
+
+### 4. Ensure extention "Remote-Containers" or "Dev-Containers" is installed.
+   ![img.png](img/Extensions.png)
+   ![img.png](img/Dev_Container_Extension_Installed.png)
+
+
+### 3. Open folder in Dev container
+#### Navigate to command palette using menu or by Ctrl + Shift + P key combination
+   ![img.png](img/Dev_Container_Command_Palette.png)
+
+#### Select "Dev Containers: Rebuild and Reopen in Container" option
+   ![img.png](img/Dev_Container_open_in_container.png)
+
+#### On successuful below would be the output in terminal
+   ![img.png](img/Dev_Container_output.png)
+
+#### 4. Use browser to access application using bleow url
+      ```
+      http://localhost:8080/swagger-ui/index.html#/
+      UI wold be like below
+      ```
+   ![img.png](img/09.png)

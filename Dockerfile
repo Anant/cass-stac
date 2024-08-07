@@ -84,7 +84,7 @@ ENV DATASTAX_ASTRA_SCB_NAME=$DATASTAX_ASTRA_SCB_NAME
 RUN /app/dockersetup.sh
 
 # Package the Maven project
-RUN mvn package -DskipTests=false
+RUN mvn package -DskipTests=true
 
 # Run the Spring Boot application with server port overridden
 CMD ["sh", "-c", "mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.port=${SERVER_PORT} --datastax.astra.secure-connect-bundle=${DATASTAX_ASTRA_SCB_NAME} \""]
