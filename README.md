@@ -744,3 +744,16 @@ $CQLSH_PATH/bin/cqlsh \
       UI wold be like below
       ```
    ![img.png](img/09.png)
+#### 5. Stop Application
+   Press Ctrl + C in Visual Studio teminal. Below info would be displayed
+   ![img.png](img/Dev-Containter-Stop-step1.png)
+
+   As suggested in the terminal, press enter key. Terminal would be close and display would be as below
+   ![img.png](img/Dev-Containter-Stop-step2.png)
+
+   Close the folder from Visual Studio.
+   ![img.png](img/Dev-Containter-Stop-step3.png)
+
+   Open new terminal outside Visual Studio and execute ./stop_and_remove_containers.sh. Output would be like below
+   ![img.png](img/Dev-Containter-Stop-step4.png)
+
