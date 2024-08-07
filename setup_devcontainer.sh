@@ -25,11 +25,12 @@ echo "DATASTAX_ASTRA_PASSWORD=$DATASTAX_ASTRA_PASSWORD" >> .env
 echo "DATASTAX_ASTRA_SCB_NAME=$DATASTAX_ASTRA_SCB_NAME" >> .env
 
 # Build the Docker image without using cache
-sudo docker build --no-cache -t stac-app \
+docker build -t stac-app \
   --build-arg ASTRA_DB_USERNAME=$ASTRA_DB_USERNAME \
   --build-arg ASTRA_DB_KEYSPACE=$ASTRA_DB_KEYSPACE \
   --build-arg ASTRA_DB_ID=$ASTRA_DB_ID \
   --build-arg DATASTAX_ASTRA_PASSWORD=$DATASTAX_ASTRA_PASSWORD \
   --build-arg DATASTAX_ASTRA_SCB_NAME=$DATASTAX_ASTRA_SCB_NAME \
   .
+
 

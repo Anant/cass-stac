@@ -16,6 +16,14 @@ $DATASTAX_ASTRA_SCB_NAME = Read-Host "Enter DATASTAX_ASTRA_SCB_NAME"
 [System.Environment]::SetEnvironmentVariable('DATASTAX_ASTRA_PASSWORD', $DATASTAX_ASTRA_PASSWORD, [System.EnvironmentVariableTarget]::Process)
 [System.Environment]::SetEnvironmentVariable('DATASTAX_ASTRA_SCB_NAME', $DATASTAX_ASTRA_SCB_NAME, [System.EnvironmentVariableTarget]::Process)
 
+# Save the environment variables to a .env file
+echo "SERVER_PORT=$SERVER_PORT" > .env
+echo "ASTRA_DB_USERNAME=$ASTRA_DB_USERNAME" >> .env
+echo "ASTRA_DB_KEYSPACE=$ASTRA_DB_KEYSPACE" >> .env
+echo "ASTRA_DB_ID=$ASTRA_DB_ID" >> .env
+echo "DATASTAX_ASTRA_PASSWORD=$DATASTAX_ASTRA_PASSWORD" >> .env
+echo "DATASTAX_ASTRA_SCB_NAME=$DATASTAX_ASTRA_SCB_NAME" >> .env
+
 # Build the Docker image
 sudo docker build -t stac-app \
   --build-arg ASTRA_DB_USERNAME=$ASTRA_DB_USERNAME \
@@ -24,14 +32,3 @@ sudo docker build -t stac-app \
   --build-arg DATASTAX_ASTRA_PASSWORD=$DATASTAX_ASTRA_PASSWORD \
   --build-arg DATASTAX_ASTRA_SCB_NAME=$DATASTAX_ASTRA_SCB_NAME \
   .
-
-# Run the Docker container
-sudo docker run -p $SERVER_PORT:$SERVER_PORT \
-  -e SERVER_PORT=$SERVER_PORT \
-  -e ASTRA_DB_USERNAME=$ASTRA_DB_USERNAME \
-  -e ASTRA_DB_KEYSPACE=$ASTRA_DB_KEYSPACE \
-  -e ASTRA_DB_ID=$ASTRA_DB_ID \
-  -e DATASTAX_ASTRA_PASSWORD=$DATASTAX_ASTRA_PASSWORD \
-  -e DATASTAX_ASTRA_SCB_NAME=$DATASTAX_ASTRA_SCB_NAME \
-  stac-app
-
