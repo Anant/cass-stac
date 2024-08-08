@@ -1,6 +1,5 @@
 package com.datastax.oss.cass_stac.controller;
 
-import com.datastax.oss.cass_stac.dto.itemfeature.GeometryDto;
 import com.datastax.oss.cass_stac.entity.Item;
 import com.datastax.oss.cass_stac.model.ItemSearchRequest;
 import com.datastax.oss.cass_stac.model.ItemSearchResponse;
@@ -13,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.locationtech.jts.geom.Geometry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,42 @@ public class SearchController {
             Only features that have a geometry that intersects the bounding box are selected.
             The bounding box is provided as four or six numbers, depending on whether the coordinate reference system includes a vertical axis (height or depth):""",
             schema = @Schema(type = "array", example = "[144.814896,-37.945733,144.838158,-37.927299]")) @RequestParam(required = false) List<Float> bbox,
-                                           @Parameter(description = "The optional intersects parameter filters the result Items in the same was as bbox, only with a GeoJSON Geometry rather than a bbox.") @RequestParam(required = false) GeometryDto intersects,
+                                           @Parameter(description = "The optional intersects parameter filters the result Items in the same was as bbox, only with a GeoJSON Geometry rather than a bbox. " +
+                                                   "GeoJSON can be a Point or a Polygon. Note that only the geometry component of the GeoJSON is ued.",
+                                                   examples = {
+                                                           @ExampleObject(name = "Point", value = """
+                                                                     {
+                                                                     "type": "Point",
+                                                                       "coordinates": [
+                                                                       -113.5546875,
+                                                                       51.17934297928927
+                                                                     ]
+                                                                   }""", description = "Search items that intersect this point, coordinates should be of length 2"),
+                                                           @ExampleObject(name = "Polygon", value = """
+                                                                   {
+                                                                           "type": "Polygon",
+                                                                           "coordinates": [
+                                                                               [
+                                                                                   [
+                                                                                       144.81543,
+                                                                                       -37.927299
+                                                                                   ],
+                                                                                   [
+                                                                                       144.814896,
+                                                                                       -37.945313
+                                                                                   ],
+                                                                                   [
+                                                                                       144.83763,
+                                                                                       -37.945733
+                                                                                   ],
+                                                                                   [
+                                                                                       144.838158,
+                                                                                       -37.927719
+                                                                                   ]
+                                                                               ]
+                                                                           ]
+                                                                       }
+                                                                   """, description = "Search items that intersect this polygon, coordinates should be of length 4")}) @RequestParam(required = false) Geometry intersects,
                                            @Parameter(description = "Either a date-time or an interval, open or closed. Date and time expressions adhere to RFC 3339. Open intervals are expressed using double-dots.",
                                                    examples = {
                                                            @ExampleObject(name = "A closed interval", value = "2023-01-30T00:00:00Z/2018-03-18T12:31:12Z"),
@@ -106,7 +142,7 @@ public class SearchController {
             @Parameter @RequestBody final ItemSearchRequest request,
             @Parameter(description = "Return partition IDs") @RequestParam(defaultValue = "true") final Boolean includeIds,
             @Parameter(description = "Return count of partitions") @RequestParam(required = false, defaultValue = "true") final Boolean includeCount,
-            @Parameter(description = "Return Items in response") @RequestParam(required = false, defaultValue = "false") final Boolean includeObjects) {
+            @Parameter(description = "Return Items in response") @RequestParam(required = false, defaultValue = "false") final Boolean includeObjects) throws IOException {
 
 
         final Map<String, String> message = new HashMap<>();
