@@ -1,8 +1,9 @@
 package com.datastax.oss.cass_stac.controller;
 
 import com.datastax.oss.cass_stac.entity.Item;
+import com.datastax.oss.cass_stac.entity.ItemCollection;
+import com.datastax.oss.cass_stac.entity.Query;
 import com.datastax.oss.cass_stac.model.ItemSearchRequest;
-import com.datastax.oss.cass_stac.model.ItemSearchResponse;
 import com.datastax.oss.cass_stac.service.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,7 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +39,7 @@ public class SearchController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "An Item.",
                     content = {@Content(mediaType = "application/geo+json",
-                            schema = @Schema(implementation = Item.class)),
+                            schema = @Schema(implementation = ItemCollection.class)),
                             @Content(mediaType = "text/html",
                                     schema = @Schema(type = "string"))}),
             @ApiResponse(responseCode = "4XX", description = "Client error",
@@ -99,18 +99,20 @@ public class SearchController {
                                            @Parameter(description = "Limit the number of results.") @RequestParam(required = false, defaultValue = "10") Integer limit,
                                            @Parameter(description = "List of item IDs to filter by.") @RequestParam(required = false) List<String> ids,
                                            @Parameter(description = "List of collections to search within.") @RequestParam(required = false) List<String> collections,
+                                           @Parameter(description = "Apply query operations to a specific property.") @RequestParam(required = false) Query query,
                                            @Parameter(description = "Return partition IDs") @RequestParam(defaultValue = "true") final Boolean includeIds,
                                            @Parameter(description = "Return count of partitions") @RequestParam(required = false, defaultValue = "true") final Boolean includeCount,
                                            @Parameter(description = "Return Items in response") @RequestParam(required = false, defaultValue = "false") final Boolean includeObjects) {
 
         try {
-            ItemSearchResponse response = itemService.search(
+            ItemCollection response = itemService.search(
                     bbox,
                     intersects,
                     datetime,
                     limit,
                     ids,
                     collections,
+                    query,
                     includeCount,
                     includeIds,
                     includeObjects);
@@ -142,18 +144,19 @@ public class SearchController {
             @Parameter @RequestBody final ItemSearchRequest request,
             @Parameter(description = "Return partition IDs") @RequestParam(defaultValue = "true") final Boolean includeIds,
             @Parameter(description = "Return count of partitions") @RequestParam(required = false, defaultValue = "true") final Boolean includeCount,
-            @Parameter(description = "Return Items in response") @RequestParam(required = false, defaultValue = "false") final Boolean includeObjects) throws IOException {
+            @Parameter(description = "Return Items in response") @RequestParam(required = false, defaultValue = "false") final Boolean includeObjects) {
 
 
         final Map<String, String> message = new HashMap<>();
         try {
-            ItemSearchResponse response = itemService.search(
+            ItemCollection response = itemService.search(
                     request.getBbox(),
                     request.getIntersects(),
                     request.getDatetime(),
                     request.getLimit(),
                     request.getIds(),
                     request.getCollections(),
+                    request.getQuery(),
                     includeCount,
                     includeIds,
                     includeObjects);
