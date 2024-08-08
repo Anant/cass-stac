@@ -14,9 +14,9 @@ import org.locationtech.jts.io.WKBWriter;
 import com.datastax.oss.cass_stac.dto.itemfeature.GeometryDto;
 
 public class GeometryUtil {
-    
 
-	public static Geometry fromGeometryByteBuffer(ByteBuffer byteBuffer) {
+
+    public static Geometry fromGeometryByteBuffer(ByteBuffer byteBuffer) {
         if (byteBuffer == null) {
             return null;
         }

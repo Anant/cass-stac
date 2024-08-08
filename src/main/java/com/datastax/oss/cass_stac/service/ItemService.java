@@ -4,7 +4,6 @@ import com.datastax.oss.cass_stac.dao.GeoPartition;
 import com.datastax.oss.cass_stac.dao.GeoTimePartition;
 import com.datastax.oss.cass_stac.dao.ItemDao;
 import com.datastax.oss.cass_stac.dao.ItemIdDao;
-import com.datastax.oss.cass_stac.dto.itemfeature.GeometryDto;
 import com.datastax.oss.cass_stac.dto.itemfeature.ItemDto;
 import com.datastax.oss.cass_stac.entity.Item;
 import com.datastax.oss.cass_stac.entity.ItemId;
@@ -265,7 +264,7 @@ public class ItemService {
      * @return
      */
     public ItemSearchResponse search(List<Float> bbox,
-                                     GeometryDto intersects,
+                                     Geometry intersects,
                                      String datetime,
                                      Integer limit,
                                      List<String> ids,
@@ -281,7 +280,7 @@ public class ItemService {
 
         if (intersects != null) {
             allItems = allItems.stream().filter(_item -> GeometryUtil.fromGeometryByteBuffer(_item.getGeometry())
-                    .intersects(GeometryUtil.createGeometryFromDto(intersects))).toList();
+                    .intersects(intersects)).toList();
         }
 
         if (collectionsArray != null) {
