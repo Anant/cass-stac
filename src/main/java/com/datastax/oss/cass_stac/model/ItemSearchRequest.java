@@ -1,5 +1,6 @@
 package com.datastax.oss.cass_stac.model;
 
+import com.datastax.oss.cass_stac.entity.Query;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.*;
@@ -28,4 +29,6 @@ public class ItemSearchRequest {
     private List<String> ids;
     @JsonProperty("limit")
     private Integer limit = 10;
+    @JsonProperty("query")
+    private Query query;
 }

@@ -5,13 +5,10 @@ import com.datastax.oss.cass_stac.dao.GeoTimePartition;
 import com.datastax.oss.cass_stac.dao.ItemDao;
 import com.datastax.oss.cass_stac.dao.ItemIdDao;
 import com.datastax.oss.cass_stac.dto.itemfeature.ItemDto;
-import com.datastax.oss.cass_stac.entity.Item;
-import com.datastax.oss.cass_stac.entity.ItemId;
-import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
+import com.datastax.oss.cass_stac.entity.*;
 import com.datastax.oss.cass_stac.model.ImageResponse;
 import com.datastax.oss.cass_stac.model.ItemModelRequest;
 import com.datastax.oss.cass_stac.model.ItemModelResponse;
-import com.datastax.oss.cass_stac.model.ItemSearchResponse;
 import com.datastax.oss.cass_stac.util.GeoJsonParser;
 import com.datastax.oss.cass_stac.util.GeometryUtil;
 import com.datastax.oss.cass_stac.util.PropertyUtil;
@@ -183,24 +180,6 @@ public class ItemService {
         return null;
     }
 
-    public ItemDto getItem(final String id) throws IOException {
-        final ItemId itemId = getItemId(id);
-
-        final ItemPrimaryKey itemPrimaryKey = new ItemPrimaryKey();
-        itemPrimaryKey.setId(id);
-        itemPrimaryKey.setPartition_id(itemId.getPartition_id());
-        final Item item = itemDao.findById(itemPrimaryKey)
-                .orElseThrow(() -> new RuntimeException("No data found"));
-        final ItemDto itemDto = convertItemToDto(item);
-        return itemDto;
-    }
-
-    public ItemId getItemId(final String id) {
-        final ItemId itemId = itemIdDao.findById(id)
-                .orElseThrow(() -> new RuntimeException("No data found for selected id"));
-        return itemId;
-    }
-
     private ItemId createItemId(final Item it) {
         final String id = it.getId().getId();
         final Instant datetime = it.getDatetime();
@@ -263,15 +242,16 @@ public class ItemService {
      * @param includeObjects
      * @return
      */
-    public ItemSearchResponse search(List<Float> bbox,
-                                     Geometry intersects,
-                                     String datetime,
-                                     Integer limit,
-                                     List<String> ids,
-                                     List<String> collectionsArray,
-                                     Boolean includeCount,
-                                     Boolean includeIds,
-                                     Boolean includeObjects) {
+    public ItemCollection search(List<Float> bbox,
+                                 Geometry intersects,
+                                 String datetime,
+                                 Integer limit,
+                                 List<String> ids,
+                                 List<String> collectionsArray,
+                                 Query query,
+                                 Boolean includeCount,
+                                 Boolean includeIds,
+                                 Boolean includeObjects) {
 
         List<Item> allItems = itemDao.findAll();
         if (ids != null) {
@@ -317,8 +297,7 @@ public class ItemService {
         Optional<Integer> matchedCount = includeCount ? Optional.of(numberMatched) : Optional.empty();
         Optional<Integer> returnedCount = includeCount ? Optional.of(numberReturned) : Optional.empty();
 
-        // TODO what is the type?
-        return new ItemSearchResponse("featureCollection", items, returnPartitions, matchedCount, returnedCount);
+        return new ItemCollection("FeatureCollection", items, returnPartitions, matchedCount, returnedCount);
     }
 
     private Boolean BboxIntersects(List<Float> current, List<Float> other) {

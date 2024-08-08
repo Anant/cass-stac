@@ -1,6 +1,5 @@
-package com.datastax.oss.cass_stac.model;
+package com.datastax.oss.cass_stac.entity;
 
-import com.datastax.oss.cass_stac.entity.Item;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,11 +12,10 @@ import java.util.Optional;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ItemSearchResponse {
-    private String type = "FeatureCollection";
+public class ItemCollection {
+    private String type = "FeatureCollection"; // REQUIRED. Always "FeatureCollection" to provide compatibility with GeoJSON.
     private Optional<List<Item>> features;
     private Optional<List<String>> partition_ids;
     private Optional<Integer> numberMatched;
     private Optional<Integer> numberReturned;
-
 }
