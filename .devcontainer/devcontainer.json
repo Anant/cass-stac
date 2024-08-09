@@ -14,12 +14,7 @@
         "DATASTAX_ASTRA_PASSWORD": "${localEnv:DATASTAX_ASTRA_PASSWORD}",
         "DATASTAX_ASTRA_SCB_NAME": "${localEnv:DATASTAX_ASTRA_SCB_NAME}"
     },
-    "postCreateCommand": "bash -c 'source /workspace/.env && cd /app && \
-        mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.port=$SERVER_PORT \
-        --datastax.astra.secure-connect-bundle=$DATASTAX_ASTRA_SCB_NAME \
-        --datastax.astra.username=$ASTRA_DB_USERNAME \
-        --datastax.astra.password=$DATASTAX_ASTRA_PASSWORD \
-        --datastax.astra.keyspace=$ASTRA_DB_KEYSPACE \"'",
+    "postCreateCommand": "/bin/bash /workspace/build_with_logging.sh",
     "workspaceFolder": "/workspace",
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind"
 }

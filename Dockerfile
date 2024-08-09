@@ -87,5 +87,5 @@ RUN /app/dockersetup.sh
 RUN mvn package -DskipTests=true
 
 # Run the Spring Boot application with server port overridden
-CMD ["sh", "-c", "mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.port=${SERVER_PORT} --datastax.astra.secure-connect-bundle=${DATASTAX_ASTRA_SCB_NAME} \""]
+CMD ["sh", "-c", "mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.port=${SERVER_PORT} --datastax.astra.username=${ASTRA_DB_USERNAME} --datastax.astra.password=${DATASTAX_ASTRA_PASSWORD} --datastax.astra.keyspace=${ASTRA_DB_KEYSPACE} --datastax.astra.secure-connect-bundle=${DATASTAX_ASTRA_SCB_NAME} \""]
 
