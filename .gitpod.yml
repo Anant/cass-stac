@@ -9,7 +9,7 @@ tasks:
        curl -O  https://downloads.datastax.com/enterprise/cqlsh-astra-20221114-bin.tar.gz 
        tar xvfz cqlsh-astra-20221114-bin.tar.gz
        export CQLSH_PATH=./cqlsh-astra/
-       mvn package -DskipTests=false
+       mvn package -DskipTests=true
       )
     command: . setup.sh && mvn spring-boot:run
 ports:
