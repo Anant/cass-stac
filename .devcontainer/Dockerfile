@@ -66,7 +66,7 @@ RUN rm -rf /app && mkdir -p /app && git clone -b main https://github.com/Anant/c
 WORKDIR /app
 
 # Make dockersetup.sh script executable
-RUN chmod +x /app/dockersetup.sh
+RUN chmod +x /app/dockersetup.sh /app/setup_devcontainer.sh
 
 # Set environment variables using build arguments
 ARG ASTRA_DB_USERNAME
@@ -79,13 +79,3 @@ ENV ASTRA_DB_KEYSPACE=$ASTRA_DB_KEYSPACE
 ENV ASTRA_DB_ID=$ASTRA_DB_ID
 ENV DATASTAX_ASTRA_PASSWORD=$DATASTAX_ASTRA_PASSWORD
 ENV DATASTAX_ASTRA_SCB_NAME=$DATASTAX_ASTRA_SCB_NAME
-
-# Run the dockersetup.sh script
-RUN /app/dockersetup.sh
-
-# Package the Maven project
-RUN mvn package -DskipTests=true
-
-# Run the Spring Boot application with server port overridden
-CMD ["sh", "-c", "mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.port=${SERVER_PORT} --datastax.astra.username=${ASTRA_DB_USERNAME} --datastax.astra.password=${DATASTAX_ASTRA_PASSWORD} --datastax.astra.keyspace=${ASTRA_DB_KEYSPACE} --datastax.astra.secure-connect-bundle=${DATASTAX_ASTRA_SCB_NAME} \""]
-

@@ -24,13 +24,8 @@ echo "ASTRA_DB_ID=$ASTRA_DB_ID" >> .env
 echo "DATASTAX_ASTRA_PASSWORD=$DATASTAX_ASTRA_PASSWORD" >> .env
 echo "DATASTAX_ASTRA_SCB_NAME=$DATASTAX_ASTRA_SCB_NAME" >> .env
 
-# Build the Docker image without using cache
-docker build -t stac-app \
-  --build-arg ASTRA_DB_USERNAME=$ASTRA_DB_USERNAME \
-  --build-arg ASTRA_DB_KEYSPACE=$ASTRA_DB_KEYSPACE \
-  --build-arg ASTRA_DB_ID=$ASTRA_DB_ID \
-  --build-arg DATASTAX_ASTRA_PASSWORD=$DATASTAX_ASTRA_PASSWORD \
-  --build-arg DATASTAX_ASTRA_SCB_NAME=$DATASTAX_ASTRA_SCB_NAME \
-  .
+. .env
 
+./dockersetup.sh
 
+mvn package -DskipTests=true && mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=${SERVER_PORT} --datastax.astra.username=${ASTRA_DB_USERNAME} --datastax.astra.password=${DATASTAX_ASTRA_PASSWORD} --datastax.astra.keyspace=${ASTRA_DB_KEYSPACE} --datastax.astra.secure-connect-bundle=${DATASTAX_ASTRA_SCB_NAME}"

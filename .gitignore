@@ -1,4 +1,5 @@
 scb*.zip
+.env
 config.properties
 
 target/

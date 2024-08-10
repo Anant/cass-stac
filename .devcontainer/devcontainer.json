@@ -1,25 +1,14 @@
 {
     "name": "stac-container",
-    "image": "stac-app:latest",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "image": "stac-app",
+    "containerName": "stac-app-instance",
     "runArgs": [
         "--init",
-        "--env-file", ".env",
         "--publish", "8080:8080"
     ],
-    "remoteEnv": {
-        "SERVER_PORT": "${localEnv:SERVER_PORT}",
-        "ASTRA_DB_USERNAME": "${localEnv:ASTRA_DB_USERNAME}",
-        "ASTRA_DB_KEYSPACE": "${localEnv:ASTRA_DB_KEYSPACE}",
-        "ASTRA_DB_ID": "${localEnv:ASTRA_DB_ID}",
-        "DATASTAX_ASTRA_PASSWORD": "${localEnv:DATASTAX_ASTRA_PASSWORD}",
-        "DATASTAX_ASTRA_SCB_NAME": "${localEnv:DATASTAX_ASTRA_SCB_NAME}"
-    },
-    "postCreateCommand": "bash -c 'source /workspace/.env && cd /app && \
-        mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.port=$SERVER_PORT \
-        --datastax.astra.secure-connect-bundle=$DATASTAX_ASTRA_SCB_NAME \
-        --datastax.astra.username=$ASTRA_DB_USERNAME \
-        --datastax.astra.password=$DATASTAX_ASTRA_PASSWORD \
-        --datastax.astra.keyspace=$ASTRA_DB_KEYSPACE \"'",
-    "workspaceFolder": "/workspace",
-    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind"
+    "postCreateCommand": "cd /app && ./setup_devcontainer.sh"
 }
