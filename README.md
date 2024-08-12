@@ -632,6 +632,8 @@ $CQLSH_PATH/bin/cqlsh \
 #### Prerequisites
     Docker installed on your system.
     Basic knowledge of Docker and command-line interface.
+    Setup database and Schema on Astra
+
 #### Files in the Repository
     Dockerfile: Contains the instructions to build the Docker image.
     dockerignore: Lists files and directories to be ignored by Docker.
@@ -700,6 +702,8 @@ $CQLSH_PATH/bin/cqlsh \
     Docker installed on your system.
     Basic knowledge of Docker and command-line interface.
     Visual Studio
+    Setup database and Schema on Astra
+
 #### Files in the Repository
     Dockerfile: Contains the instructions to build the Docker image.
     dockerignore: Lists files and directories to be ignored by Docker.
@@ -707,35 +711,59 @@ $CQLSH_PATH/bin/cqlsh \
     setup_devcontainer.sh: Shell script to setup docker environment and create docker image
     devcontainer.json: File required by Dev container
 ### 1. Clone the Repository
-   Clone the repository containing these files to your local machine.
-
-   ![img.png](img/Git_clone.png)
-
-### 2. Build the Docker Image
 ```
-   Open cass-stac folder using Visual Studio.
-   open a new terminal
-   chmod +x setup_devcontainer.sh
-   ./setup_devcontainer.sh
-   execution of above would prompt user to provide values for input parameters. Would start image building after parameters are provided.
-   It would be like below
+   1 -> Open Visual Studio
+   2 -> Navigate to command palette using menu or by Ctrl + Shift + P key combination
+```
+   ![img.png](img/VS_Code_Command_Palette_Menu.png)
+
+```
+   3 -> Type "Git: Clone" in command palette and press enter key
+```
+   ![img.png](img/VS_Code_Command_Palette.png)
+   ![img.png](img/VS-Code-Command-Palette-Git-Clone.png)
+```
+   Below option would be displayed in command palette
+```
+   ![img.png](img/VS-Code-Command-Palette-Git-Clone-output.png)
+```
+   4 -> Paste "https://github.com/Anant/cass-stac.git" and press enter key
+   This would prompt to select directory to which repository to be cloned. Select a directory and click on "Select as Repository Destination".
+```
+   ![img.png](img/VS-Code-select-repo-directory.png)
+
+```
+   Below pop-up would be displayed. Click on "Open".
+```
+   ![img.png](img/VS-Code-pop-up-1.png)
+
+```
+   Another pop-up would be displayed to confirm it is from trusted source. Click on "Yes, I trust the authors"
+```
+   ![img.png](img/VS-Code-pop-up-2.png)
+
+```
+   Close / Cancel any pop-up displayed after 2nd pop-up
 ```
 
-   ![img.png](img/Setup_DevContainer_ouptut.png)
-
-### 4. Ensure extention "Remote-Containers" or "Dev-Containers" is installed.
+### 2. Ensure extention "Remote-Containers" or "Dev-Containers" is installed.
    ![img.png](img/Extensions.png)
    ![img.png](img/Dev_Container_Extension_Installed.png)
 
 
 ### 3. Open folder in Dev container
 #### Navigate to command palette using menu or by Ctrl + Shift + P key combination
-   ![img.png](img/Dev_Container_Command_Palette.png)
+   ![img.png](img/VS_Code_Command_Palette_Menu.png)
 
 #### Select "Dev Containers: Rebuild and Reopen in Container" option
    ![img.png](img/Dev_Container_open_in_container.png)
 
-#### On successuful below would be the output in terminal
+#### This would prompt user to enter values for the parameters. Below would be screen
+   ![img.png](img/VS-Code-enter-parameter-values.png)
+#### Key in parameter values. Below are parameter sample values.
+   ![img.png](img/VS-Code-sample-parameter-values.png)
+
+#### Once values for all parameters are provided and on successuful deployment, output in terminal would be like below. There would be line stating "ACCEPTING TRAFFIC" 
    ![img.png](img/Dev_Container_output.png)
 
 #### 4. Use browser to access application using bleow url
