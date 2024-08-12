@@ -1,6 +1,5 @@
 package com.datastax.oss.cass_stac.model;
 
-import com.datastax.oss.cass_stac.entity.Query;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.*;
@@ -8,6 +7,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.n52.jackson.datatype.jts.GeometryDeserializer;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -30,5 +30,5 @@ public class ItemSearchRequest {
     @JsonProperty("limit")
     private Integer limit = 10;
     @JsonProperty("query")
-    private Query query;
+    private Map<String, Map<String, String>> query;
 }

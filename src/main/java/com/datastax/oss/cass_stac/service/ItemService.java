@@ -5,15 +5,20 @@ import com.datastax.oss.cass_stac.dao.GeoTimePartition;
 import com.datastax.oss.cass_stac.dao.ItemDao;
 import com.datastax.oss.cass_stac.dao.ItemIdDao;
 import com.datastax.oss.cass_stac.dto.itemfeature.ItemDto;
-import com.datastax.oss.cass_stac.entity.*;
+import com.datastax.oss.cass_stac.entity.Item;
+import com.datastax.oss.cass_stac.entity.ItemCollection;
+import com.datastax.oss.cass_stac.entity.ItemId;
+import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
 import com.datastax.oss.cass_stac.model.ImageResponse;
 import com.datastax.oss.cass_stac.model.ItemModelRequest;
 import com.datastax.oss.cass_stac.model.ItemModelResponse;
 import com.datastax.oss.cass_stac.util.GeoJsonParser;
 import com.datastax.oss.cass_stac.util.GeometryUtil;
 import com.datastax.oss.cass_stac.util.PropertyUtil;
+import com.datastax.oss.cass_stac.util.QueryEvaluator;
 import com.datastax.oss.driver.api.core.data.CqlVector;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -248,7 +253,7 @@ public class ItemService {
                                  Integer limit,
                                  List<String> ids,
                                  List<String> collectionsArray,
-                                 Query query,
+                                 Map<String, Map<String, String>> query,
                                  Boolean includeCount,
                                  Boolean includeIds,
                                  Boolean includeObjects) {
@@ -289,6 +294,22 @@ public class ItemService {
             }).toList();
         }
 
+        if (query != null) {
+            QueryEvaluator evaluator = new QueryEvaluator();
+            allItems = allItems.stream().filter(_item -> {
+                Map<String, Object> additionalAttributes;
+                JsonNode attributes;
+                try {
+                    attributes = objectMapper.readValue(_item.getAdditional_attributes(), JsonNode.class).get("properties");
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+                logger.info(String.valueOf(attributes));
+                additionalAttributes = objectMapper.convertValue(attributes, new TypeReference<>() {
+                });
+                return evaluator.evaluate(query, additionalAttributes);
+            }).toList();
+        }
         int numberMatched = allItems.size();
         int numberReturned = min(limit, numberMatched);
         allItems = allItems.subList(0, numberReturned);

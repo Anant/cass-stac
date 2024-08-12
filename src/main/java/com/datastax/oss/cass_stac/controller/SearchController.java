@@ -2,7 +2,6 @@ package com.datastax.oss.cass_stac.controller;
 
 import com.datastax.oss.cass_stac.entity.Item;
 import com.datastax.oss.cass_stac.entity.ItemCollection;
-import com.datastax.oss.cass_stac.entity.Query;
 import com.datastax.oss.cass_stac.model.ItemSearchRequest;
 import com.datastax.oss.cass_stac.service.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Geometry;
 import org.slf4j.Logger;
@@ -28,14 +28,14 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/search")
+@Tag(name = "search", description = "Item Search")
 public class SearchController {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final ItemService itemService;
 
     @Operation(summary = "Search STAC items with simple filtering.",
-            description = "Retrieve Items matching filters. Intended as a shorthand API for simple queries.",
-            tags = "Item Search")
+            description = "Retrieve Items matching filters. Intended as a shorthand API for simple queries.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "An Item.",
                     content = {@Content(mediaType = "application/geo+json",
@@ -99,7 +99,7 @@ public class SearchController {
                                            @Parameter(description = "Limit the number of results.") @RequestParam(required = false, defaultValue = "10") Integer limit,
                                            @Parameter(description = "List of item IDs to filter by.") @RequestParam(required = false) List<String> ids,
                                            @Parameter(description = "List of collections to search within.") @RequestParam(required = false) List<String> collections,
-                                           @Parameter(description = "Apply query operations to a specific property.") @RequestParam(required = false) Query query,
+                                           @Parameter(description = "Apply query operations to a specific property.") @RequestParam(required = false) Map<String, Map<String, String>> query,
                                            @Parameter(description = "Return partition IDs") @RequestParam(defaultValue = "true") final Boolean includeIds,
                                            @Parameter(description = "Return count of partitions") @RequestParam(required = false, defaultValue = "true") final Boolean includeCount,
                                            @Parameter(description = "Return Items in response") @RequestParam(required = false, defaultValue = "false") final Boolean includeObjects) {
@@ -126,8 +126,7 @@ public class SearchController {
     }
 
     @Operation(summary = "Search STAC items with simple filtering.",
-            description = "Retrieve Items matching filters. Intended as a shorthand API for simple queries.",
-            tags = "Item Search")
+            description = "Retrieve Items matching filters. Intended as a shorthand API for simple queries.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "An Item.",
                     content = {@Content(mediaType = "application/json",
