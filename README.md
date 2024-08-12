@@ -532,7 +532,7 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
 1. Create a [DataStax Astra account](https://dtsx.io/38HWu73) if you don't already have one:
    ![image](img/01.png)
 
-2. On the home page. Locate the button **`Create Database`** both vector and non-vector support the Cassandra CQL
+2. On the home page. Locate the button **`Create Database`** and create a vector database.
    ![image](img/02.png)
 
 3. Populate the fields and click create database
@@ -566,7 +566,7 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
    bottom of the screen:
    ![img.png](img/07.png)
 
-3. When the app is finished building, click the 'Open Browser' button on the bottom right of the screen:
+3. When the app is finished building, click the 'Open Browser' button on the bottom right of the screen, add /swagger-ui/index.html#/ to the end of the given URL.:
 
    ![img.png](img/08.png)
 4. You've successfully built a Spring Data Datastax application!
