@@ -1,5 +1,6 @@
 package com.datastax.oss.cass_stac.model;
 
+import com.datastax.oss.cass_stac.entity.SortBy;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.*;
@@ -30,5 +31,7 @@ public class ItemSearchRequest {
     @JsonProperty("limit")
     private Integer limit = 10;
     @JsonProperty("query")
-    private Map<String, Map<String, String>> query;
+    private Map<String, Map<String, Object>> query;
+    @JsonProperty("sortby")
+    private List<SortBy> sortby;
 }

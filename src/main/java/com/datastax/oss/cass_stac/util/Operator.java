@@ -1,5 +1,6 @@
 package com.datastax.oss.cass_stac.util;
 
+import java.util.HashSet;
 import java.util.List;
 
 public enum Operator {
@@ -59,8 +60,10 @@ public enum Operator {
     },
     IN {
         @Override
-        public boolean apply(String actualValue, String expectedValue) {
-            return List.of(expectedValue.split(",")).contains(actualValue);
+        public boolean apply(String _actualValue, String _expectedValue) {
+            List<String> expectedValue = List.of(_expectedValue.replace("[", "").replace("]", "").trim().split(","));
+            List<String> actualValue = List.of(_actualValue.replace("[", "").replace("]", "").trim().split(","));
+            return new HashSet<>(actualValue).containsAll(expectedValue);
         }
     };
 

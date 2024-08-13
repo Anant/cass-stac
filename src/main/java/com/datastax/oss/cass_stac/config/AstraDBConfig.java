@@ -9,6 +9,8 @@ import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 
 import lombok.Data;
 
+import java.util.Objects;
+
 @Configuration
 @Data
 public class AstraDBConfig {
@@ -31,7 +33,7 @@ public class AstraDBConfig {
 		final String username = astraProperties.getUsername();
 		final String password = astraProperties.getPassword();
 		final String keyspace = astraProperties.getKeyspace();
-		return builder -> builder.withCloudSecureConnectBundle(this.getClass().getResourceAsStream("/"+secureBundleFile))
+		return builder -> builder.withCloudSecureConnectBundle(Objects.requireNonNull(this.getClass().getResourceAsStream("/" + secureBundleFile)))
                                                     .withAuthCredentials(username, password)
                                                     .withKeyspace(keyspace);
     }

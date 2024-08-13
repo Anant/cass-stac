@@ -5,17 +5,11 @@ import com.datastax.oss.cass_stac.dao.GeoTimePartition;
 import com.datastax.oss.cass_stac.dao.ItemDao;
 import com.datastax.oss.cass_stac.dao.ItemIdDao;
 import com.datastax.oss.cass_stac.dto.itemfeature.ItemDto;
-import com.datastax.oss.cass_stac.entity.Item;
-import com.datastax.oss.cass_stac.entity.ItemCollection;
-import com.datastax.oss.cass_stac.entity.ItemId;
-import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
+import com.datastax.oss.cass_stac.entity.*;
 import com.datastax.oss.cass_stac.model.ImageResponse;
 import com.datastax.oss.cass_stac.model.ItemModelRequest;
 import com.datastax.oss.cass_stac.model.ItemModelResponse;
-import com.datastax.oss.cass_stac.util.GeoJsonParser;
-import com.datastax.oss.cass_stac.util.GeometryUtil;
-import com.datastax.oss.cass_stac.util.PropertyUtil;
-import com.datastax.oss.cass_stac.util.QueryEvaluator;
+import com.datastax.oss.cass_stac.util.*;
 import com.datastax.oss.driver.api.core.data.CqlVector;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -253,11 +247,14 @@ public class ItemService {
                                  Integer limit,
                                  List<String> ids,
                                  List<String> collectionsArray,
-                                 Map<String, Map<String, String>> query,
+                                 Map<String, Map<String, Object>> query,
+                                 List<SortBy> sort,
                                  Boolean includeCount,
                                  Boolean includeIds,
                                  Boolean includeObjects) {
 
+//        List<Item> allItems = sort != Sort.unsorted() ? itemDao.findAll(PageRequest.of(0, Integer.MAX_VALUE, sort)).getContent() : itemDao.findAll();
+//        List<Item> allItems = sort != Sort.unsorted() ? itemDao.findAll(CassandraPageRequest.of(0, Integer.MAX_VALUE, sort)).getContent() : itemDao.findAll();
         List<Item> allItems = itemDao.findAll();
         if (ids != null) {
             allItems = allItems.stream().filter(item -> ids.contains(item.getId().getId())).toList();
@@ -304,12 +301,16 @@ public class ItemService {
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
-                logger.info(String.valueOf(attributes));
                 additionalAttributes = objectMapper.convertValue(attributes, new TypeReference<>() {
                 });
                 return evaluator.evaluate(query, additionalAttributes);
             }).toList();
         }
+
+        if (sort != null) {
+            allItems = SortUtils.sortItems(allItems, sort);
+        }
+
         int numberMatched = allItems.size();
         int numberReturned = min(limit, numberMatched);
         allItems = allItems.subList(0, numberReturned);

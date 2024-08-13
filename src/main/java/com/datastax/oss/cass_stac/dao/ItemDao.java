@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ItemDao extends  CassandraRepository<Item, ItemPrimaryKey>{
+public interface ItemDao extends CassandraRepository<Item, ItemPrimaryKey> {
     @Query(value = "SELECT * FROM item where partition_id = :partition_id AND id = :id")
     List<Item> findItemByPartitionIdAndId(@Param("partition_id") final String partition_id, @Param("id") final String id);
 
