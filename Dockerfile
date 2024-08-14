@@ -10,48 +10,18 @@ ENV TERM=xterm
 
 # Install necessary packages including build tools and jq
 RUN apt-get update && apt-get install -y \
-    apt-utils \
     curl \
     tar \
     git \
     python3 \
-    python3-venv \
-    python3-dev \
     maven \
-    unzip \
-    zip \
-    build-essential \
-    libssl-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    libreadline-dev \
-    libsqlite3-dev \
     wget \
-    llvm \
-    libncurses5-dev \
-    libncursesw5-dev \
-    xz-utils \
-    tk-dev \
-    libffi-dev \
-    liblzma-dev \
     jq \
     && apt-get clean
-
-# Install sdkman and Java using sdkman
-RUN curl -s "https://get.sdkman.io" | bash && \
-    bash -c "source $SDKMAN_DIR/bin/sdkman-init.sh && sdk install java 17.0.4.1-tem"
 
 # Manually download and set up Astra CLI (replace with correct URL)
 RUN curl -Ls "https://downloads.datastax.com/enterprise/astra-cli/latest/astra-cli-linux-amd64" -o /usr/local/bin/astra && \
     chmod +x /usr/local/bin/astra
-
-# Install pyenv and set up Python environment
-RUN curl https://pyenv.run | bash
-ENV PATH="/root/.pyenv/bin:$PATH"
-RUN echo 'export PATH="/root/.pyenv/bin:$PATH"' >> /root/.bashrc
-RUN echo 'eval "$(pyenv init --path)"' >> /root/.bashrc
-RUN echo 'eval "$(pyenv init -)"' >> /root/.bashrc
-RUN bash -c "source /root/.bashrc && pyenv install 3.8.16 -f && pyenv global 3.8.16"
 
 # Download and extract cqlsh-astra
 RUN curl -O https://downloads.datastax.com/enterprise/cqlsh-astra-20221114-bin.tar.gz && \
@@ -81,11 +51,11 @@ ENV DATASTAX_ASTRA_PASSWORD=$DATASTAX_ASTRA_PASSWORD
 ENV DATASTAX_ASTRA_SCB_NAME=$DATASTAX_ASTRA_SCB_NAME
 
 # Run the dockersetup.sh script
-RUN /app/dockersetup.sh
+# RUN /app/dockersetup.sh
 
 # Package the Maven project
 RUN mvn package -DskipTests=true
 
 # Run the Spring Boot application with server port overridden
-CMD ["sh", "-c", "mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.port=${SERVER_PORT} --datastax.astra.username=${ASTRA_DB_USERNAME} --datastax.astra.password=${DATASTAX_ASTRA_PASSWORD} --datastax.astra.keyspace=${ASTRA_DB_KEYSPACE} --datastax.astra.secure-connect-bundle=${DATASTAX_ASTRA_SCB_NAME} \""]
+CMD ["sh", "-c", "/app/dockersetup.sh && mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.port=${SERVER_PORT} --datastax.astra.username=${ASTRA_DB_USERNAME} --datastax.astra.password=${DATASTAX_ASTRA_PASSWORD} --datastax.astra.keyspace=${ASTRA_DB_KEYSPACE} --datastax.astra.secure-connect-bundle=${DATASTAX_ASTRA_SCB_NAME} \""]
 
