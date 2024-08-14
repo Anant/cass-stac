@@ -645,24 +645,17 @@ $CQLSH_PATH/bin/cqlsh \
 
 ### 2. Build the Docker Image
    Use the Dockerfile to build the Docker image. Run the following command in the directory containing the Dockerfile.
-   Command would run dockersetup.sh internally and setup environmental variables
    ```
-      sudo docker build -t container_name \
-      --build-arg ASTRA_DB_USERNAME=token \
-      --build-arg ASTRA_DB_KEYSPACE=keyspace_name \
-      --build-arg ASTRA_DB_ID=astra_database_id \
-      --build-arg DATASTAX_ASTRA_PASSWORD=Astra_application_password \
-      --build-arg DATASTAX_ASTRA_SCB_NAME=SCB.zip \
-      .
+      sudo docker build -t container_name .
    ```
-![img.png](img/Docker_Build.png)
+![img.png](img/Docker-build-start.png)
 
 ### 3. On successful completion, out put of build command would be like below
 
-![img.png](img/Docker_build_command_output.png)
+![img.png](img/Docker-build-end.png)
 
 ### 4. Access the Application
-   Once the container is running, you can access the application using the URL and port specified while building container.
+   Once the container is running, you can access the application from browser using URL.
    Below is the command to start docker container.
    ```
       docker run -p port_no:port_no \
