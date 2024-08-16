@@ -703,7 +703,12 @@ $CQLSH_PATH/bin/cqlsh \
     dockersetup.sh: Shell script to set up the Docker environment and download SCB from Astra.
     setup_devcontainer.sh: Shell script to setup docker environment and create docker image
     devcontainer.json: File required by Dev container
-### 1. Clone the Repository
+
+### 1. Ensure extention "Remote-Containers" or "Dev-Containers" is installed.
+   ![img.png](img/Extensions.png)
+   ![img.png](img/Dev_Container_Extension_Installed.png)
+
+### 2. Clone the repository and open in container volume
 ```
    1 -> Open Visual Studio
    2 -> Navigate to command palette using menu or by Ctrl + Shift + P key combination
@@ -711,45 +716,21 @@ $CQLSH_PATH/bin/cqlsh \
    ![img.png](img/VS_Code_Command_Palette_Menu.png)
 
 ```
-   3 -> Type "Git: Clone" in command palette and press enter key
+   3 -> Type "Dev Containers: Clone Repository in Container Volume" in command palette and select the same
 ```
    ![img.png](img/VS_Code_Command_Palette.png)
-   ![img.png](img/VS-Code-Command-Palette-Git-Clone.png)
 ```
    Below option would be displayed in command palette
 ```
-   ![img.png](img/VS-Code-Command-Palette-Git-Clone-output.png)
+   ![img.png](img/Clone-repo-container-volume.png)
 ```
-   4 -> Paste "https://github.com/Anant/cass-stac.git" and press enter key
-   This would prompt to select directory to which repository to be cloned. Select a directory and click on "Select as Repository Destination".
+   4 -> Paste "https://github.com/Anant/cass-stac.git" and press enter key. Below pop-up would be displayed to select repo branch. Select "main" branch.
 ```
-   ![img.png](img/VS-Code-select-repo-directory.png)
+   ![img.png](img/Select-Branch.png)
 
 ```
-   Below pop-up would be displayed. Click on "Open".
+   Close / Cancel any pop-up displayed after this
 ```
-   ![img.png](img/VS-Code-pop-up-1.png)
-
-```
-   Another pop-up would be displayed to confirm it is from trusted source. Click on "Yes, I trust the authors"
-```
-   ![img.png](img/VS-Code-pop-up-2.png)
-
-```
-   Close / Cancel any pop-up displayed after 2nd pop-up
-```
-
-### 2. Ensure extention "Remote-Containers" or "Dev-Containers" is installed.
-   ![img.png](img/Extensions.png)
-   ![img.png](img/Dev_Container_Extension_Installed.png)
-
-
-### 3. Open folder in Dev container
-#### Navigate to command palette using menu or by Ctrl + Shift + P key combination
-   ![img.png](img/VS_Code_Command_Palette_Menu.png)
-
-#### Select "Dev Containers: Rebuild and Reopen in Container" option
-   ![img.png](img/Dev_Container_open_in_container.png)
 
 #### This would prompt user to enter values for the parameters. Below would be screen
    ![img.png](img/VS-Code-enter-parameter-values.png)
