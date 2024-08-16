@@ -28,14 +28,24 @@ public class SortUtils {
                 .collect(Collectors.toList());
     }
     private static Comparator<Item> getComparatorForField(String field) {
-        return switch (field) {
-            // TODO
-            case "collection" -> Comparator.comparing(Item::getCollection);
-            case "datetime" -> Comparator.comparing(Item::getDatetime);
-            case "properties" -> Comparator.comparing(Item::getProperties);
-            case "additional_attributes" -> Comparator.comparing(Item::getAdditional_attributes);
-            default -> throw new IllegalArgumentException("Invalid sort field: " + field);
-        };
+        if (field.contains(".")) {
+            String[] fields = field.split("\\.");
+            return switch (fields[0]) {
+                // TODO figure out how to extract nested values from poperties and additonal_attribute strings
+                case  "properties" ->  Comparator.comparing(Item::getProperties::);
+                case "additional_attributes" -> Comparator.comparing(Item::getAdditional_attributes::);
+                default -> throw new IllegalArgumentException("Invalid sort field: " + field);
+            };
+        }else{
+            return switch (field) {
+                // TODO compare Ids
+                case "collection" -> Comparator.comparing(Item::getCollection);
+                case "datetime" -> Comparator.comparing(Item::getDatetime);
+                case "properties" -> Comparator.comparing(Item::getProperties);
+                case "additional_attributes" -> Comparator.comparing(Item::getAdditional_attributes);
+                default -> throw new IllegalArgumentException("Invalid sort field: " + field);
+            };
+        }
     }
 
     public List<SortBy> parseSortBy(String sortBy) {
