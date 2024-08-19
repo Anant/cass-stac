@@ -32,8 +32,8 @@ public class SortUtils {
             String[] fields = field.split("\\.");
             return switch (fields[0]) {
                 // TODO figure out how to extract nested values from poperties and additonal_attribute strings
-                case  "properties" ->  Comparator.comparing(Item::getProperties::);
-                case "additional_attributes" -> Comparator.comparing(Item::getAdditional_attributes::);
+                case  "properties" ->  Comparator.comparing(Item::getProperties);
+                case "additional_attributes" -> Comparator.comparing(Item::getAdditional_attributes);
                 default -> throw new IllegalArgumentException("Invalid sort field: " + field);
             };
         }else{
