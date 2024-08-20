@@ -5,17 +5,15 @@ import com.datastax.oss.cass_stac.dao.GeoTimePartition;
 import com.datastax.oss.cass_stac.dao.ItemDao;
 import com.datastax.oss.cass_stac.dao.ItemIdDao;
 import com.datastax.oss.cass_stac.dto.itemfeature.ItemDto;
-import com.datastax.oss.cass_stac.entity.Item;
-import com.datastax.oss.cass_stac.entity.ItemId;
-import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
+import com.datastax.oss.cass_stac.entity.*;
 import com.datastax.oss.cass_stac.model.ImageResponse;
 import com.datastax.oss.cass_stac.model.ItemModelRequest;
 import com.datastax.oss.cass_stac.model.ItemModelResponse;
-import com.datastax.oss.cass_stac.util.GeoJsonParser;
-import com.datastax.oss.cass_stac.util.GeometryUtil;
-import com.datastax.oss.cass_stac.util.PropertyUtil;
+import com.datastax.oss.cass_stac.util.*;
 import com.datastax.oss.driver.api.core.data.CqlVector;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +30,8 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+
+import static java.lang.Integer.min;
 
 @Service
 @RequiredArgsConstructor
@@ -179,24 +179,6 @@ public class ItemService {
         return null;
     }
 
-    public ItemDto getItem(final String id) {
-        final ItemId itemId = getItemId(id);
-
-        final ItemPrimaryKey itemPrimaryKey = new ItemPrimaryKey();
-        itemPrimaryKey.setId(id);
-        itemPrimaryKey.setPartition_id(itemId.getPartition_id());
-        final Item item = itemDao.findById(itemPrimaryKey)
-                .orElseThrow(() -> new RuntimeException("No data found"));
-        final ItemDto itemDto = convertItemToDto(item);
-        return itemDto;
-    }
-
-    public ItemId getItemId(final String id) {
-        final ItemId itemId = itemIdDao.findById(id)
-                .orElseThrow(() -> new RuntimeException("No data found for selected id"));
-        return itemId;
-    }
-
     private ItemId createItemId(final Item it) {
         final String id = it.getId().getId();
         final Instant datetime = it.getDatetime();
@@ -208,12 +190,32 @@ public class ItemService {
         return itemId;
     }
 
-    private ItemDto convertItemToDto(final Item item) {
+
+    private static List<Float> convertJsonNodeToFloatArray(JsonNode jsonNode) {
+        List<Float> floatArray = new ArrayList<>(List.of());
+        for (JsonNode node : jsonNode) {
+            if (node.isNumber()) {
+                floatArray.add(node.floatValue());
+            } else {
+                throw new IllegalArgumentException("JsonNode contains non-numeric values");
+            }
+        }
+
+        return floatArray;
+    }
+
+    private ItemDto convertItemToDto(final Item item) throws IOException {
+        JsonNode bbox = objectMapper.readValue(item.getAdditional_attributes(), JsonNode.class).get("bbox");
+        List<Float> floatArray = null;
+        if (bbox.isArray()) {
+            floatArray = convertJsonNodeToFloatArray(bbox);
+        }
         return ItemDto.builder()
                 .id(item.getId().getId())
                 .partition_id(item.getId().getPartition_id())
                 .collection(item.getCollection())
                 .additional_attributes(item.getAdditional_attributes())
+                .bbox(floatArray)
                 .build();
     }
 
@@ -221,20 +223,136 @@ public class ItemService {
         return objectMapper.readValue(geoJson, ItemModelRequest.class);
     }
 
+
+    /**
+     * search within all items, items that intersect with bbox or a geometry using intersects
+     * date might be used as well as a filter
+     * might be fetched using ids only
+     * if collection ids is not null, search items in these collections
+     *
+     * @param bbox
+     * @param intersects
+     * @param datetime
+     * @param limit
+     * @param ids
+     * @param collectionsArray
+     * @param includeCount
+     * @param includeIds
+     * @param includeObjects
+     * @return
+     */
+    public ItemCollection search(List<Float> bbox,
+                                 Geometry intersects,
+                                 String datetime,
+                                 Integer limit,
+                                 List<String> ids,
+                                 List<String> collectionsArray,
+                                 Map<String, Map<String, Object>> query,
+                                 List<SortBy> sort,
+                                 Boolean includeCount,
+                                 Boolean includeIds,
+                                 Boolean includeObjects) {
+
+//        List<Item> allItems = sort != Sort.unsorted() ? itemDao.findAll(PageRequest.of(0, Integer.MAX_VALUE, sort)).getContent() : itemDao.findAll();
+//        List<Item> allItems = sort != Sort.unsorted() ? itemDao.findAll(CassandraPageRequest.of(0, Integer.MAX_VALUE, sort)).getContent() : itemDao.findAll();
+        List<Item> allItems = itemDao.findAll();
+        if (ids != null) {
+            allItems = allItems.stream().filter(item -> ids.contains(item.getId().getId())).toList();
+        }
+
+        if (intersects != null) {
+            allItems = allItems.stream().filter(_item -> GeometryUtil.fromGeometryByteBuffer(_item.getGeometry())
+                    .intersects(intersects)).toList();
+        }
+
+        if (collectionsArray != null) {
+            allItems = allItems.stream().filter(_item -> collectionsArray.contains(_item.getCollection())).toList();
+        }
+
+        if (datetime != null && datetime.contains("/")) {
+            String[] parts = datetime.split("/");
+            Instant start = parts[0].equals("..") ? Instant.EPOCH : Instant.parse(parts[0]);
+            Instant end = parts[1].equals("..") ? Instant.now().plusSeconds(3155695200L) : Instant.parse(parts[1]);
+            allItems = allItems.stream().filter(item -> item.getDatetime().compareTo(start) >= 0 && item.getDatetime().compareTo(end) <= 0).toList();
+        } else if (datetime != null) {
+            Instant instantDateTime = Instant.parse(datetime);
+            allItems = allItems.stream().filter(item -> item.getDatetime().equals(instantDateTime)).toList();
+        }
+
+        if (bbox != null) {
+            allItems = allItems.stream().filter(_item -> {
+                ItemDto itemDto;
+                try {
+                    itemDto = convertItemToDto(_item);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                return BboxIntersects(itemDto.getBbox(), bbox);
+            }).toList();
+        }
+
+        if (query != null) {
+            QueryEvaluator evaluator = new QueryEvaluator();
+            allItems = allItems.stream().filter(_item -> {
+                Map<String, Object> additionalAttributes;
+                JsonNode attributes;
+                try {
+                    attributes = objectMapper.readValue(_item.getAdditional_attributes(), JsonNode.class).get("properties");
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+                additionalAttributes = objectMapper.convertValue(attributes, new TypeReference<>() {
+                });
+                return evaluator.evaluate(query, additionalAttributes);
+            }).toList();
+        }
+
+        if (sort != null) {
+            allItems = SortUtils.sortItems(allItems, sort);
+        }
+
+        int numberMatched = allItems.size();
+        int numberReturned = min(limit, numberMatched);
+        allItems = allItems.subList(0, numberReturned);
+        Optional<List<Item>> items = includeObjects ? Optional.of(allItems) : Optional.empty();
+        Optional<List<String>> returnPartitions = includeIds ? Optional.of(allItems.stream().map(item -> item.getId().getPartition_id()).toList()) : Optional.empty();
+        Optional<Integer> matchedCount = includeCount ? Optional.of(numberMatched) : Optional.empty();
+        Optional<Integer> returnedCount = includeCount ? Optional.of(numberReturned) : Optional.empty();
+
+        return new ItemCollection("FeatureCollection", items, returnPartitions, matchedCount, returnedCount);
+    }
+
+    private Boolean BboxIntersects(List<Float> current, List<Float> other) {
+        if (other.size() != 4) {
+            throw new IllegalArgumentException("The bbox parameter must contain 4 values.");
+        }
+
+        float minLng = other.get(0);
+        float minLat = other.get(1);
+        float maxLng = other.get(2);
+        float maxLat = other.get(3);
+
+        return (current.get(0) < maxLng) && (current.get(2) > minLng) &&
+                (current.get(1) < maxLat) && (current.get(3) > minLat);
+    }
+
     public ImageResponse getPartitions(
             ItemModelRequest request,
-            Optional<OffsetDateTime> minDate,
-            Optional<OffsetDateTime> maxDate,
+            OffsetDateTime minDate,
+            OffsetDateTime maxDate,
             List<String> objectTypeFilter,
             String whereClause,
             Object bindVars,
             Boolean useCentroid,
+            Boolean includeCount,
+            Boolean includeIds,
             Boolean filterObjectsByPolygon,
             Boolean includeObjects) {
-        if (maxDate.isEmpty() && minDate.isPresent()) maxDate = Optional.of(minDate.get().withHour(23)
+
+        if (maxDate == null && minDate != null) maxDate = minDate.withHour(23)
                 .withMinute(59)
                 .withSecond(59)
-                .withNano(999_999_999));
+                .withNano(999_999_999);
 
         List<String> partitions = switch (request.getGeometry().getGeometryType()) {
             case "Point" ->
@@ -249,13 +367,15 @@ public class ItemService {
                 .toList())
                 : Optional.empty();
 
-        return new ImageResponse(partitions, partitions.size(), items);
+        Optional<Integer> count = includeCount ? Optional.of(partitions.size()) : Optional.empty();
+        Optional<List<String>> returnPartitions = includeIds ? Optional.of(partitions) : Optional.empty();
+        return new ImageResponse(returnPartitions, count, items);
     }
 
     private List<String> getPointPartitions(
             ItemModelRequest request,
-            Optional<OffsetDateTime> minDate,
-            Optional<OffsetDateTime> maxDate,
+            OffsetDateTime minDate,
+            OffsetDateTime maxDate,
             List<String> objectTypeFilter,
             String whereClause,
             Object bindVars,
@@ -266,15 +386,15 @@ public class ItemService {
 
         Geometry geometry = request.getGeometry();
         Point point = geometry.getFactory().createPoint(geometry.getCoordinate());
-        return Collections.singletonList(minDate.isPresent()
-                ? new GeoTimePartition(geoResolution, timeResolution).getGeoTimePartitionForPoint(point, minDate.get())
+        return Collections.singletonList(minDate != null
+                ? new GeoTimePartition(geoResolution, timeResolution).getGeoTimePartitionForPoint(point, minDate)
                 : new GeoPartition(geoResolution).getGeoPartitionForPoint(point));
     }
 
     private List<String> getPolygonPartitions(
             ItemModelRequest request,
-            Optional<OffsetDateTime> minDate,
-            Optional<OffsetDateTime> maxDate,
+            OffsetDateTime minDate,
+            OffsetDateTime maxDate,
             List<String> objectTypeFilter,
             String whereClause,
             Object bindVars,
@@ -285,8 +405,8 @@ public class ItemService {
 
         Geometry geometry = request.getGeometry();
         Polygon polygon = geometry.getFactory().createPolygon(geometry.getCoordinates());
-        return (maxDate.isPresent() && minDate.isPresent()) ? new GeoTimePartition(geoResolution, timeResolution)
-                .getGeoTimePartitions(polygon, minDate.get(), maxDate.get()) : new GeoPartition(geoResolution).getGeoPartitions(polygon);
+        return (maxDate != null && minDate != null) ? new GeoTimePartition(geoResolution, timeResolution)
+                .getGeoTimePartitions(polygon, minDate, maxDate) : new GeoPartition(geoResolution).getGeoPartitions(polygon);
 
     }
 

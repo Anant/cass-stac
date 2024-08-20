@@ -6,9 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Data
@@ -16,7 +14,7 @@ import java.util.Optional;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ImageResponse {
-    private List<String> partitions;
-    private Integer count;
+    private Optional<List<String>> partitions = Optional.empty();
+    private Optional<Integer> count = Optional.empty();
     private Optional<List<Item>> items = Optional.empty();
 }

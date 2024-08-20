@@ -3,10 +3,10 @@ package com.datastax.oss.cass_stac.util;
 import com.datastax.oss.cass_stac.model.ItemModelRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class GeoJsonParser {
     private static final ObjectMapper objectMapper = new ObjectMapper();

@@ -5,7 +5,6 @@ import com.datastax.oss.cass_stac.model.ItemModelRequest;
 import com.datastax.oss.cass_stac.model.ItemModelResponse;
 import com.datastax.oss.cass_stac.service.ItemService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,7 +20,6 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -86,13 +84,15 @@ public class ItemController {
     @Operation(description = "Fetch partitions from Item data given spatio-temporal data")
     @PostMapping("/images")
     public ResponseEntity<?> getImages(@RequestBody final ItemModelRequest request,
-                                       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<OffsetDateTime> minDate,
-                                       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<OffsetDateTime> maxDate,
+                                       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime minDate,
+                                       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime maxDate,
                                        @RequestParam(required = false) final List<String> objectTypeFilter,
                                        @RequestParam(required = false) final String whereClause,
                                        @RequestParam(required = false) final Object bindVars,
                                        @RequestParam(required = false, defaultValue = "false") final Boolean useCentroid,
                                        @RequestParam(required = false, defaultValue = "true") final Boolean filterObjectsByPolygon,
+                                       @RequestParam(required = false, defaultValue = "true") final Boolean includeIds,
+                                       @RequestParam(required = false, defaultValue = "true") final Boolean includeCount,
                                        @RequestParam(required = false, defaultValue = "false") final Boolean includeObjects) {
 
         final Map<String, String> message = new HashMap<>();
@@ -105,6 +105,8 @@ public class ItemController {
                     whereClause,
                     bindVars,
                     useCentroid,
+                    includeCount,
+                    includeIds,
                     filterObjectsByPolygon,
                     includeObjects);
             return new ResponseEntity<>(response, HttpStatus.OK);

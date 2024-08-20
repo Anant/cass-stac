@@ -2,20 +2,18 @@ package com.datastax.oss.cass_stac.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.Getter;
+import lombok.Setter;
 import org.locationtech.jts.geom.Geometry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
+@Setter
+@Getter
 public class ItemModelRequest extends GeoJsonItemRequest {
 
     private static final Logger logger = LoggerFactory.getLogger(ItemModelRequest.class);
@@ -44,37 +42,9 @@ public class ItemModelRequest extends GeoJsonItemRequest {
         setCollection(collection);
     }
 
-    public String getCollection() {
-        return collection;
-    }
-
-    public void setCollection(String collection) {
-        this.collection = collection;
-    }
-
     @Override
     public Map<String, Object> getProperties() {
         return properties;
-    }
-
-    public void setProperties(Map<String, Object> properties) {
-        this.properties = properties;
-    }
-
-    public String getDatetime() {
-        return datetime;
-    }
-
-    public void setDatetime(String datetime) {
-        this.datetime = datetime;
-    }
-
-    public Map<String, Object> getContent() {
-        return content;
-    }
-
-    public void setContent(Map<String, Object> content) {
-        this.content = content;
     }
 
     private void constructorInit() {
@@ -120,7 +90,10 @@ public class ItemModelRequest extends GeoJsonItemRequest {
                 '}';
     }
 
+    @Getter
+    @Setter
     public static class Properties {
+        // getters and setters
         @JsonProperty("gsd")
         private Double gsd;
         @JsonProperty("datetime")
@@ -139,71 +112,6 @@ public class ItemModelRequest extends GeoJsonItemRequest {
         private double[] projTransform;
         @JsonProperty("other")
         private Map<String, Object> other = new HashMap<>();
-
-        // getters and setters
-        public Double getGsd() {
-            return gsd;
-        }
-
-        public void setGsd(Double gsd) {
-            this.gsd = gsd;
-        }
-
-        public OffsetDateTime getDatetime() {
-            return datetime;
-        }
-
-        public void setDatetime(OffsetDateTime datetime) {
-            this.datetime = datetime;
-        }
-
-        public String getPlatform() {
-            return platform;
-        }
-
-        public void setPlatform(String platform) {
-            this.platform = platform;
-        }
-
-        public String getGridCode() {
-            return gridCode;
-        }
-
-        public void setGridCode(String gridCode) {
-            this.gridCode = gridCode;
-        }
-
-        public Integer getProjEpsg() {
-            return projEpsg;
-        }
-
-        public void setProjEpsg(Integer projEpsg) {
-            this.projEpsg = projEpsg;
-        }
-
-        public int[] getProjShape() {
-            return projShape;
-        }
-
-        public void setProjShape(int[] projShape) {
-            this.projShape = projShape;
-        }
-
-        public Double getEoCloudCover() {
-            return eoCloudCover;
-        }
-
-        public void setEoCloudCover(Double eoCloudCover) {
-            this.eoCloudCover = eoCloudCover;
-        }
-
-        public double[] getProjTransform() {
-            return projTransform;
-        }
-
-        public void setProjTransform(double[] projTransform) {
-            this.projTransform = projTransform;
-        }
 
         public Object get(String key) {
             return other.get(key);
