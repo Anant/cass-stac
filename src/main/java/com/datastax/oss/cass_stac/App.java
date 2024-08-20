@@ -1,17 +1,15 @@
 package com.datastax.oss.cass_stac;
 
+import com.datastax.oss.cass_stac.config.DataStaxAstraProperties;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.CqlSessionBuilder;
+import com.datastax.oss.driver.api.core.type.codec.registry.MutableCodecRegistry;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.dao.QueryTimeoutException;
-
-import com.datastax.oss.cass_stac.config.DataStaxAstraProperties;
-import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.CqlSessionBuilder;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @SpringBootApplication
 @EnableConfigurationProperties(DataStaxAstraProperties.class)
@@ -49,13 +47,13 @@ public class App implements CommandLineRunner{
 					    indexed_properties_text map<text, text>,
 					    indexed_properties_timestamp map<text, timestamp>,
 					    properties text,
-					    PRIMARY KEY (partition_id, id)) 
+					    PRIMARY KEY (partition_id, id))
 				""";
 		final String itemids_create_table_statement = """
 				CREATE TABLE IF NOT EXISTS item_ids (
 				    id text PRIMARY KEY,
 				    datetime timestamp,
-				    partition_id text) 
+				    partition_id text)
 			""";
 		final String feature_create_table_statement = """
 				CREATE TABLE IF NOT EXISTS feature (
@@ -90,9 +88,9 @@ public class App implements CommandLineRunner{
 		final String item_centroid_create_index_statement = """
 				CREATE CUSTOM INDEX IF NOT EXISTS item_centroid_ann_idx ON item (centroid) USING 'org.apache.cassandra.index.sai.StorageAttachedIndex' WITH OPTIONS = {'similarity_function': 'euclidean'}
 				""";
-		
+
 		CqlSession cqlSession = cqlSessionBuilder.build();
-		
+
 		// Execute for Table
 		try {
 			cqlSession.execute(item_create_table_statement);
@@ -111,9 +109,6 @@ public class App implements CommandLineRunner{
 			log.info("Verification of Item_properties_datetime index is successful");
 			cqlSession.execute(item_centroid_create_index_statement);
 			log.info("Verification of Item_centroid index is successful");
-		} catch (QueryTimeoutException ex) {
-			log.error(ex.getLocalizedMessage());
-			System.exit(1);
 		} catch(Exception ex) {
 			log.error(ex.getLocalizedMessage());
 			System.exit(1);

@@ -31,7 +31,6 @@ public class SortUtils {
         if (field.contains(".")) {
             String[] fields = field.split("\\.");
             return switch (fields[0]) {
-                // TODO figure out how to extract nested values from poperties and additonal_attribute strings
                 case  "properties" ->  Comparator.comparing(Item::getProperties);
                 case "additional_attributes" -> Comparator.comparing(Item::getAdditional_attributes);
                 default -> throw new IllegalArgumentException("Invalid sort field: " + field);
@@ -68,26 +67,5 @@ public class SortUtils {
 
         return sort;
     }
-
-//    public Sort parseSortBy(List<SortBy> sortRequests) {
-//        Sort sort = Sort.unsorted();
-//
-//        for (SortBy sortRequest : sortRequests) {
-//            Sort.Direction direction = Sort.Direction.fromString(sortRequest.getDirection());
-//            sort = sort.and(Sort.by(direction, quoteFieldIfNecessary(sortRequest.getField())));
-//        }
-//
-//        return sort;
-//    }
-
-//    private static final Pattern NEEDS_QUOTING = Pattern.compile("[^a-zA-Z0-9_]");
-//
-//    private String quoteFieldIfNecessary(String field) {
-//        // Quote the field name if it contains any characters that require quoting
-//        if (NEEDS_QUOTING.matcher(field).find()) {
-//            return "\"" + field + "\"";
-//        }
-//        return field;
-//    }
 
 }

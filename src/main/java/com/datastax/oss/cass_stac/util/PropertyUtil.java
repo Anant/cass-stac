@@ -5,7 +5,7 @@ import com.datastax.oss.cass_stac.model.PropertyObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +18,7 @@ public class PropertyUtil {
     private static final String MAP_BOOLEAN_KEY = "indexed_boolean";
     private final Map<String, String> indexedTextProps = new HashMap<>();
     private final Map<String, Number> indexedNumberProps = new HashMap<>();
-    private final Map<String, OffsetDateTime> indexedTimestampProps = new HashMap<>();
+    private final Map<String, Instant> indexedTimestampProps = new HashMap<>();
     private final Map<String, Boolean> indexedBooleanProps = new HashMap<>();
 
     public PropertyUtil(Map<String, String> propertyIndexMap, PropertyObject propertyObject) {
@@ -33,15 +33,15 @@ public class PropertyUtil {
                             break;
                         case MAP_NUMBER_KEY:
                             if (value instanceof Number)
-                                indexedNumberProps.put(key, (Number) value);
+                                indexedNumberProps.put(key, (Number) ((Number) value).doubleValue());
                             break;
                         case MAP_BOOLEAN_KEY:
                             if (value instanceof Boolean)
                                 indexedBooleanProps.put(key, (Boolean) value);
                             break;
                         case MAP_TIMESTAMP_KEY:
-                            if (value instanceof OffsetDateTime)
-                                indexedTimestampProps.put(key, (OffsetDateTime) value);
+                            if (valueIsInstant(value))
+                                indexedTimestampProps.put(key, Instant.parse(value.toString()));
                             break;
                     }
                 } catch (ClassCastException e) {
@@ -50,6 +50,15 @@ public class PropertyUtil {
                 }
             }
         });
+    }
+
+    private boolean valueIsInstant(Object value) {
+        try {
+            Instant.parse(value.toString());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public static Map<String, String> getPropertyMap(String configPrefix) {
@@ -80,7 +89,7 @@ public class PropertyUtil {
         return this.indexedNumberProps;
     }
 
-    public Map<String, OffsetDateTime> getIndexedTimestampProps() {
+    public Map<String, Instant> getIndexedTimestampProps() {
         return this.indexedTimestampProps;
     }
 

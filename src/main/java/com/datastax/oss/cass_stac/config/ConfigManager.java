@@ -30,7 +30,7 @@ public class ConfigManager {
 
     private void loadProperties() {
         // Load the bundled config.properties from the classpath
-        try (InputStream input = ConfigManager.class.getClassLoader().getResourceAsStream("config.properties")) {
+        try (InputStream input = ConfigManager.class.getClassLoader().getResourceAsStream("application.properties")) {
             if (input != null) {
                 defaultProperties.load(input);
             }

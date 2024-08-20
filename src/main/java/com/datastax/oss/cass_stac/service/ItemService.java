@@ -42,7 +42,7 @@ public class ItemService {
     private static final Map<String, String> propertyIndexMap = PropertyUtil.getPropertyMap("dao.item.property.IndexList");
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
-    private static final Set<String> datetimeFields = new HashSet<>(Arrays.asList("datetime", "start_datetime", "end_datetime"));
+    private static final Set<String> datetimeFields = new HashSet<>(Arrays.asList("datetime", "start_datetime", "end_datetime", "created", "updated"));
 
     public ItemModelResponse getItemById(final String id) {
         final ItemId itemId = itemIdDao.findById(id)
@@ -108,6 +108,8 @@ public class ItemService {
         final int geoResolution = 6;
         final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
         final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
+        if (itemModel.getContent().getOrDefault("properties", null) != null)
+            itemModel.setProperties((Map<String, Object>) itemModel.getContent().get("properties"));
         final PropertyUtil propertyUtil = new PropertyUtil(propertyIndexMap, itemModel);
         Point centroid = itemModel.getGeometry().getCentroid();
         CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
@@ -253,8 +255,6 @@ public class ItemService {
                                  Boolean includeIds,
                                  Boolean includeObjects) {
 
-//        List<Item> allItems = sort != Sort.unsorted() ? itemDao.findAll(PageRequest.of(0, Integer.MAX_VALUE, sort)).getContent() : itemDao.findAll();
-//        List<Item> allItems = sort != Sort.unsorted() ? itemDao.findAll(CassandraPageRequest.of(0, Integer.MAX_VALUE, sort)).getContent() : itemDao.findAll();
         List<Item> allItems = itemDao.findAll();
         if (ids != null) {
             allItems = allItems.stream().filter(item -> ids.contains(item.getId().getId())).toList();
