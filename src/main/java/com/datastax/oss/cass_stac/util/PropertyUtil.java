@@ -33,7 +33,7 @@ public class PropertyUtil {
                             break;
                         case MAP_NUMBER_KEY:
                             if (value instanceof Number)
-                                indexedNumberProps.put(key, (Number) value);
+                                indexedNumberProps.put(key, (Number) ((Number) value).doubleValue());
                             break;
                         case MAP_BOOLEAN_KEY:
                             if (value instanceof Boolean)
