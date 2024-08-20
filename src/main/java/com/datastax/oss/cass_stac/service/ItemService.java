@@ -75,9 +75,6 @@ public class ItemService {
             logger.debug("ItemModelRequest properties: " + itemModelRequest.getProperties());
         }
         final Item item = convertItemModelRequestToItem(itemModelRequest);
-        logger.info("item.toString()");
-        logger.info(item.getDatetime().toString());
-        logger.info(item.getIndexed_properties_timestamp().toString());
         final Item it = itemDao.save(item);
         final ItemId itemId = createItemId(it);
         itemIdDao.save(itemId);
