@@ -42,7 +42,7 @@ public class ItemService {
     private static final Map<String, String> propertyIndexMap = PropertyUtil.getPropertyMap("dao.item.property.IndexList");
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
-    private static final Set<String> datetimeFields = new HashSet<>(Arrays.asList("datetime", "start_datetime", "end_datetime"));
+    private static final Set<String> datetimeFields = new HashSet<>(Arrays.asList("datetime", "start_datetime", "end_datetime", "created", "updated"));
 
     public ItemModelResponse getItemById(final String id) {
         final ItemId itemId = itemIdDao.findById(id)
@@ -75,6 +75,9 @@ public class ItemService {
             logger.debug("ItemModelRequest properties: " + itemModelRequest.getProperties());
         }
         final Item item = convertItemModelRequestToItem(itemModelRequest);
+        logger.info("item.toString()");
+        logger.info(item.getDatetime().toString());
+        logger.info(item.getIndexed_properties_timestamp().toString());
         final Item it = itemDao.save(item);
         final ItemId itemId = createItemId(it);
         itemIdDao.save(itemId);
@@ -253,8 +256,6 @@ public class ItemService {
                                  Boolean includeIds,
                                  Boolean includeObjects) {
 
-//        List<Item> allItems = sort != Sort.unsorted() ? itemDao.findAll(PageRequest.of(0, Integer.MAX_VALUE, sort)).getContent() : itemDao.findAll();
-//        List<Item> allItems = sort != Sort.unsorted() ? itemDao.findAll(CassandraPageRequest.of(0, Integer.MAX_VALUE, sort)).getContent() : itemDao.findAll();
         List<Item> allItems = itemDao.findAll();
         if (ids != null) {
             allItems = allItems.stream().filter(item -> ids.contains(item.getId().getId())).toList();

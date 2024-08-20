@@ -36,7 +36,8 @@ public class ItemModelResponse extends GeoJsonItemResponse {
         this.propertiesDateFields = new HashSet<>();
         propertiesDateFields.add("datetime");
         propertiesDateFields.add("start_datetime");
-        propertiesDateFields.add("end_datetimecreated");
+        propertiesDateFields.add("end_datetime");
+        propertiesDateFields.add("created");
         propertiesDateFields.add("updated");
     }
 

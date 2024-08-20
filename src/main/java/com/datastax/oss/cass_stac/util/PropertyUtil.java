@@ -5,7 +5,7 @@ import com.datastax.oss.cass_stac.model.PropertyObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +18,7 @@ public class PropertyUtil {
     private static final String MAP_BOOLEAN_KEY = "indexed_boolean";
     private final Map<String, String> indexedTextProps = new HashMap<>();
     private final Map<String, Number> indexedNumberProps = new HashMap<>();
-    private final Map<String, OffsetDateTime> indexedTimestampProps = new HashMap<>();
+    private final Map<String, Instant> indexedTimestampProps = new HashMap<>();
     private final Map<String, Boolean> indexedBooleanProps = new HashMap<>();
 
     public PropertyUtil(Map<String, String> propertyIndexMap, PropertyObject propertyObject) {
@@ -40,8 +40,8 @@ public class PropertyUtil {
                                 indexedBooleanProps.put(key, (Boolean) value);
                             break;
                         case MAP_TIMESTAMP_KEY:
-                            if (value instanceof OffsetDateTime)
-                                indexedTimestampProps.put(key, (OffsetDateTime) value);
+                            if (value instanceof Instant)
+                                indexedTimestampProps.put(key, (Instant) value);
                             break;
                     }
                 } catch (ClassCastException e) {
@@ -80,7 +80,7 @@ public class PropertyUtil {
         return this.indexedNumberProps;
     }
 
-    public Map<String, OffsetDateTime> getIndexedTimestampProps() {
+    public Map<String, Instant> getIndexedTimestampProps() {
         return this.indexedTimestampProps;
     }
 

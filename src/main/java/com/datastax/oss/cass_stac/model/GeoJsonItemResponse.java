@@ -4,11 +4,14 @@ import com.datastax.oss.cass_stac.config.ConfigManager;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.Getter;
+import lombok.Setter;
 import org.n52.jackson.datatype.jts.JtsModule;
 
 import java.util.Map;
 import java.util.Objects;
 
+@Getter
 public class GeoJsonItemResponse extends PropertyObject {
 
     @JsonProperty("type")
@@ -19,6 +22,7 @@ public class GeoJsonItemResponse extends PropertyObject {
         objectMapper.registerModule(new JtsModule(ConfigManager.getInstance().getIntProperty("geojson.coordinateDecimalPlaces", 16)));
     }
 
+    @Setter
     @JsonProperty("id")
     private String id;
 
@@ -46,18 +50,6 @@ public class GeoJsonItemResponse extends PropertyObject {
 
     public String getType() {
         return TYPE;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getGeometry() {
-        return geometry;
     }
 
     @Override

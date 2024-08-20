@@ -39,8 +39,8 @@ public class ItemController {
         final Map<String, String> message = new HashMap<>();
         try {
             logger.debug("Received JSON for saving item: " + json);
-            message.put("message", "Item Added Successfully");
             itemService.saveGeoJson(json);
+            message.put("message", "Item Added Successfully");
             return new ResponseEntity<>(message, HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("Failed to save item.", ex);
