@@ -111,6 +111,8 @@ public class ItemService {
         final int geoResolution = 6;
         final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
         final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
+        if (itemModel.getContent().getOrDefault("properties", null) != null)
+            itemModel.setProperties((Map<String, Object>) itemModel.getContent().get("properties"));
         final PropertyUtil propertyUtil = new PropertyUtil(propertyIndexMap, itemModel);
         Point centroid = itemModel.getGeometry().getCentroid();
         CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));

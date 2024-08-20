@@ -89,13 +89,7 @@ public class App implements CommandLineRunner{
 				CREATE CUSTOM INDEX IF NOT EXISTS item_centroid_ann_idx ON item (centroid) USING 'org.apache.cassandra.index.sai.StorageAttachedIndex' WITH OPTIONS = {'similarity_function': 'euclidean'}
 				""";
 
-		CqlSession cqlSession = cqlSessionBuilder
-				.addTypeCodecs(new OffsetDateTimeCodec())
-				.build();
-
-		MutableCodecRegistry registry =
-				(MutableCodecRegistry) cqlSession.getContext().getCodecRegistry();
-		registry.register(new OffsetDateTimeCodec());
+		CqlSession cqlSession = cqlSessionBuilder.build();
 
 		// Execute for Table
 		try {

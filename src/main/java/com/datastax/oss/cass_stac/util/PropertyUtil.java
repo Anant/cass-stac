@@ -40,8 +40,8 @@ public class PropertyUtil {
                                 indexedBooleanProps.put(key, (Boolean) value);
                             break;
                         case MAP_TIMESTAMP_KEY:
-                            if (value instanceof Instant)
-                                indexedTimestampProps.put(key, (Instant) value);
+                            if (valueIsInstant(value))
+                                indexedTimestampProps.put(key, Instant.parse(value.toString()));
                             break;
                     }
                 } catch (ClassCastException e) {
@@ -50,6 +50,15 @@ public class PropertyUtil {
                 }
             }
         });
+    }
+
+    private boolean valueIsInstant(Object value) {
+        try {
+            Instant.parse(value.toString());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public static Map<String, String> getPropertyMap(String configPrefix) {
