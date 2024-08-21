@@ -1,6 +1,5 @@
 package com.datastax.oss.cass_stac.controller;
 
-import com.datastax.oss.cass_stac.entity.Item;
 import com.datastax.oss.cass_stac.entity.ItemCollection;
 import com.datastax.oss.cass_stac.model.ItemSearchRequest;
 import com.datastax.oss.cass_stac.service.ItemService;
@@ -134,7 +133,7 @@ public class SearchController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "An Item.",
                     content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = Item.class)),
+                            schema = @Schema(implementation = ItemCollection.class)),
                             @Content(mediaType = "text/html",
                                     schema = @Schema(type = "string"))}),
             @ApiResponse(responseCode = "4XX", description = "Client error",

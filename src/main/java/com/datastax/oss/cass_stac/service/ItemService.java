@@ -30,7 +30,9 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
+import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.min;
 
 @Service
@@ -410,4 +412,25 @@ public class ItemService {
 
     }
 
+    public AggregationCollection agg(
+            List<Float> bbox,
+            Geometry intersects,
+            String datetime,
+            List<String> ids,
+            List<String> collections,
+            Map<String, Map<String, Object>> query,
+            List<String> aggregations) {
+        ItemCollection itemCollection = search(bbox, intersects, datetime, null, ids, collections, query, null, false, false, true);
+
+//        if (itemCollection.getFeatures().isPresent()) itemCollection.getFeatures().get().stream().collect(Collectors.collectingAndThen(
+//                        Collectors.summarizingLong(Item::getDatetime),
+//                        stats -> new AggregationCollection(
+//                                stats.getCount(),
+//                                stats.getMin(),
+//                                stats.getMax(),
+//                                stats.getSum(),
+//                                stats.getAverage()
+//
+//        )));
+    }
 }
