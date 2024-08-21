@@ -4,6 +4,7 @@ import com.datastax.oss.cass_stac.entity.Aggregation;
 import com.datastax.oss.cass_stac.entity.Item;
 import lombok.Getter;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,17 +53,30 @@ public enum AggregationUtil {
                             .collect(Collectors.toList());
             return new Aggregation("collections", "numeric", buckets, 0, Optional.empty());
         }
-    };
+    },
 //    CLOUD_COVER_FREQUENCY("cloud_cover_frequency") {
 //        @Override
 //        public Aggregation apply(List<Item> items) {
 //        }
 //    },
-//    DATETIME_FREQUENCY("datetime_frequency") {
-//        @Override
-//        public Aggregation apply(List<Item> items) {
-//        }
-//    };
+    DATETIME_FREQUENCY("datetime_frequency") {
+        @Override
+        public Aggregation apply(List<Item> items) {
+            Map<Instant, Long> frequencyMap = items.stream().collect(Collectors.groupingBy(Item::getDatetime, Collectors.counting()));
+            List<Aggregation.Bucket> buckets =
+                    frequencyMap.entrySet().stream()
+                            .map(entry -> {
+                                Aggregation.Bucket bucket = new Aggregation.Bucket();
+                                bucket.setKey(entry.getKey().toString());
+                                bucket.setFrequency(Math.toIntExact(entry.getValue()));
+                                bucket.setData_type("datetime");
+                                return bucket;
+                            })
+                            .collect(Collectors.toList());
+            return new Aggregation("datetime", "numeric", buckets, 0, Optional.empty());
+
+        }
+    };
 
     private final String fieldName;
 
