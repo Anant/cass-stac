@@ -321,7 +321,7 @@ public class ItemService {
         Optional<Integer> matchedCount = includeCount ? Optional.of(numberMatched) : Optional.empty();
         Optional<Integer> returnedCount = includeCount ? Optional.of(numberReturned) : Optional.empty();
 
-        return new ItemCollection("FeatureCollection", items, returnPartitions, matchedCount, returnedCount);
+        return new ItemCollection(items, returnPartitions, matchedCount, returnedCount);
     }
 
     private Boolean BboxIntersects(List<Float> current, List<Float> other) {
@@ -420,17 +420,13 @@ public class ItemService {
             List<String> collections,
             Map<String, Map<String, Object>> query,
             List<String> aggregations) {
-        ItemCollection itemCollection = search(bbox, intersects, datetime, null, ids, collections, query, null, false, false, true);
+        ItemCollection itemCollection = search(bbox, intersects, datetime, MAX_VALUE, ids, collections, query, null, false, false, true);
 
-//        if (itemCollection.getFeatures().isPresent()) itemCollection.getFeatures().get().stream().collect(Collectors.collectingAndThen(
-//                        Collectors.summarizingLong(Item::getDatetime),
-//                        stats -> new AggregationCollection(
-//                                stats.getCount(),
-//                                stats.getMin(),
-//                                stats.getMax(),
-//                                stats.getSum(),
-//                                stats.getAverage()
-//
-//        )));
+        List<Aggregation> aggegationList = aggregations.stream().map(aggregationName -> {
+            AggregationUtil aggregation = AggregationUtil.valueOf(aggregationName.toUpperCase());
+
+            return aggregation.apply(itemCollection.getFeatures().orElse(null));
+        }).toList();
+        return new AggregationCollection(aggegationList);
     }
 }
