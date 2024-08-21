@@ -13,7 +13,7 @@ import java.util.Optional;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ItemCollection {
-    private String type = "FeatureCollection"; // REQUIRED. Always "FeatureCollection" to provide compatibility with GeoJSON.
+    private final String type = "FeatureCollection"; // REQUIRED. Always "FeatureCollection" to provide compatibility with GeoJSON.
     private Optional<List<Item>> features;
     private Optional<List<String>> partition_ids;
     private Optional<Integer> numberMatched;

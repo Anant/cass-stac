@@ -12,6 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AggregationCollection {
-    private String type = "AggregationCollection"; // REQUIRED. Always "AggregationCollection"
+    private final String type = "AggregationCollection"; // REQUIRED. Always "AggregationCollection"
     private List<Aggregation> aggregations;
 }
