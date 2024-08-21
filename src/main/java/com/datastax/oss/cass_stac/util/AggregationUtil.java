@@ -5,6 +5,9 @@ import com.datastax.oss.cass_stac.entity.Item;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Getter
 public enum AggregationUtil {
@@ -12,15 +15,10 @@ public enum AggregationUtil {
     TOTAL_COUNT("total_count") {
         @Override
         public Aggregation apply(List<Item> items) {
-//            private String name;
-//            private String data_type;
-//            private List<Bucket> buckets;
-//            private Integer overflow;
-//            private Object value;
-            return new Aggregation("total_count", "numeric", null, 0, items.size());
+            return new Aggregation("total_count", "numeric", null, 0, Optional.of(items.size()));
         }
-    };
-//    DATETIME_MIN("datetime_min") {
+    },
+    //    DATETIME_MIN("datetime_min") {
 //        @Override
 //        public Aggregation apply(List<Item> items) {
 //            return items.stream()
@@ -38,11 +36,23 @@ public enum AggregationUtil {
 //                    .orElse(null);
 //        }
 //    },
-//    COLLECTION_FREQUENCY("collection_frequency") {
-//        @Override
-//        public Aggregation apply(List<Item> items) {
-//        }
-//    },
+    COLLECTION_FREQUENCY("collection_frequency") {
+        @Override
+        public Aggregation apply(List<Item> items) {
+            Map<String, Long> frequencyMap = items.stream().collect(Collectors.groupingBy(Item::getCollection, Collectors.counting()));
+            List<Aggregation.Bucket> buckets =
+                    frequencyMap.entrySet().stream()
+                            .map(entry -> {
+                                Aggregation.Bucket bucket = new Aggregation.Bucket();
+                                bucket.setKey(entry.getKey());
+                                bucket.setFrequency(Math.toIntExact(entry.getValue()));
+                                bucket.setData_type("numeric");
+                                return bucket;
+                            })
+                            .collect(Collectors.toList());
+            return new Aggregation("collections", "numeric", buckets, 0, Optional.empty());
+        }
+    };
 //    CLOUD_COVER_FREQUENCY("cloud_cover_frequency") {
 //        @Override
 //        public Aggregation apply(List<Item> items) {

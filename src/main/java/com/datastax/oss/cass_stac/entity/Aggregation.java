@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Optional;
 
 @Data
 @Builder
@@ -16,17 +17,18 @@ public class Aggregation {
     private String data_type;
     private List<Bucket> buckets;
     private Integer overflow;
-    private Object value;
+    private Optional<Object> value = Optional.empty();
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Bucket {
+        private String key;
+        private String data_type;
+        private Integer frequency;
+        private Double from;
+        private Double to;
+    }
 }
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-class Bucket {
-    private String key;
-    private String data_type;
-    private Integer frequency;
-    private Double from;
-    private Double to;
-}
