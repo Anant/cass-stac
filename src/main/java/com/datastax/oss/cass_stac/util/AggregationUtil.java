@@ -19,24 +19,24 @@ public enum AggregationUtil {
             return new Aggregation("total_count", "numeric", null, 0, Optional.of(items.size()));
         }
     },
-    //    DATETIME_MIN("datetime_min") {
-//        @Override
-//        public Aggregation apply(List<Item> items) {
-//            return items.stream()
-//                    .map(Item::getDatetime)
-//                    .min(Instant::compareTo)
-//                    .orElse(null);
-//        }
-//    },
-//    DATETIME_MAX("datetime_max") {
-//        @Override
-//        public Aggregation apply(List<Item> items) {
-//            return items.stream()
-//                    .map(Item::getDatetime)
-//                    .max(Instant::compareTo)
-//                    .orElse(null);
-//        }
-//    },
+    DATETIME_MIN("datetime_min") {
+        @Override
+        public Aggregation apply(List<Item> items) {
+            return new Aggregation("datetime_min", "datetime", null, 0, Optional.of( items.stream()
+                    .map(Item::getDatetime)
+                    .min(Instant::compareTo)
+                    .orElse(null)));
+        }
+    },
+    DATETIME_MAX("datetime_max") {
+        @Override
+        public Aggregation apply(List<Item> items) {
+            return new Aggregation("datetime_max", "datetime", null, 0, Optional.of( items.stream()
+                    .map(Item::getDatetime)
+                    .max(Instant::compareTo)
+                    .orElse(null)));
+        }
+    },
     COLLECTION_FREQUENCY("collection_frequency") {
         @Override
         public Aggregation apply(List<Item> items) {
