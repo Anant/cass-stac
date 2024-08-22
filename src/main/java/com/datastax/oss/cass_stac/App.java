@@ -3,7 +3,6 @@ package com.datastax.oss.cass_stac;
 import com.datastax.oss.cass_stac.config.DataStaxAstraProperties;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.CqlSessionBuilder;
-import com.datastax.oss.driver.api.core.type.codec.registry.MutableCodecRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -16,7 +15,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @RequiredArgsConstructor
 @Slf4j
 public class App implements CommandLineRunner{
-	
+
 	private final CqlSessionBuilder cqlSessionBuilder;
 
 	public static void main(String[] args) {
@@ -31,8 +30,6 @@ public class App implements CommandLineRunner{
 
 	@Override
 	public void run(String... args) throws Exception {
-		
-		
 		final String item_create_table_statement = """
 					CREATE TABLE IF NOT EXISTS item (
 					    partition_id text,
@@ -78,7 +75,7 @@ public class App implements CommandLineRunner{
 				    partition_id text,
 				    properties text)
 				""";
-		
+
 		final String item_datetime_create_index_statement = """
 				CREATE CUSTOM INDEX IF NOT EXISTS item_datetime ON item (datetime) USING 'StorageAttachedIndex'
 				""";
@@ -101,7 +98,7 @@ public class App implements CommandLineRunner{
 			log.info("Verification of Feature table is successful");
 			cqlSession.execute(feature_collection_create_table_statement);
 			log.info("Verification of Feature_collection table is successful");
-			
+
 			// Execute for Indexes
 			cqlSession.execute(item_datetime_create_index_statement);
 			log.info("Verification of Item_datetime index is successful");
@@ -113,7 +110,7 @@ public class App implements CommandLineRunner{
 			log.error(ex.getLocalizedMessage());
 			System.exit(1);
 		}
-		
+
 	}
 
 }

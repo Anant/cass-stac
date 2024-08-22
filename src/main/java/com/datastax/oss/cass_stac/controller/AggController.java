@@ -1,6 +1,5 @@
 package com.datastax.oss.cass_stac.controller;
 
-import com.datastax.oss.cass_stac.entity.Aggregation;
 import com.datastax.oss.cass_stac.entity.AggregationCollection;
 import com.datastax.oss.cass_stac.model.AggregateRequest;
 import com.datastax.oss.cass_stac.service.ItemService;
@@ -20,7 +19,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -60,7 +62,8 @@ public class AggController {
                     request.getIds(),
                     request.getCollections(),
                     request.getQuery(),
-                    request.getAggregations()
+                    request.getAggregations(),
+                    request.getRanges()
             );
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception ex) {

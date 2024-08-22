@@ -1,21 +1,20 @@
 package com.datastax.oss.cass_stac.entity;
 
-import java.nio.ByteBuffer;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.Map;
-
+import com.datastax.oss.driver.api.core.data.CqlVector;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
-import org.springframework.data.cassandra.core.mapping.Table;
 
-import com.datastax.oss.driver.api.core.data.CqlVector;
-
-import lombok.Data;
+import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.util.Map;
 
 @Data
-@Table(value = "item")
 @Getter
 @Setter
 public class Item {
@@ -31,4 +30,13 @@ public class Item {
 	private String properties;
 	private String additional_attributes;
 	private CqlVector<Float> centroid;
+
+	public Double getCloudCover() throws JsonProcessingException {
+		ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
+			Map<String, Object> map = objectMapper.readValue(properties, new TypeReference<>() {
+			});
+			Object value = map.get("eo:cloud_cover");
+			return value != null ? Double.parseDouble(value.toString()) : null;
+	}
 }

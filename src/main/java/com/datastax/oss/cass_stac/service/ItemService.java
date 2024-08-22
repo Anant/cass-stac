@@ -6,6 +6,7 @@ import com.datastax.oss.cass_stac.dao.ItemDao;
 import com.datastax.oss.cass_stac.dao.ItemIdDao;
 import com.datastax.oss.cass_stac.dto.itemfeature.ItemDto;
 import com.datastax.oss.cass_stac.entity.*;
+import com.datastax.oss.cass_stac.model.AggregateRequest;
 import com.datastax.oss.cass_stac.model.ImageResponse;
 import com.datastax.oss.cass_stac.model.ItemModelRequest;
 import com.datastax.oss.cass_stac.model.ItemModelResponse;
@@ -30,7 +31,6 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.min;
@@ -257,10 +257,7 @@ public class ItemService {
                                  Boolean includeIds,
                                  Boolean includeObjects) {
 
-        List<Item> allItems = itemDao.findAll();
-        if (ids != null) {
-            allItems = allItems.stream().filter(item -> ids.contains(item.getId().getId())).toList();
-        }
+        List<Item> allItems = (ids != null) ? itemDao.findItemByIds(ids) : itemDao.findAll();
 
         if (intersects != null) {
             allItems = allItems.stream().filter(_item -> GeometryUtil.fromGeometryByteBuffer(_item.getGeometry())
@@ -419,13 +416,15 @@ public class ItemService {
             List<String> ids,
             List<String> collections,
             Map<String, Map<String, Object>> query,
-            List<String> aggregations) {
+            List<String> aggregations,
+            List<AggregateRequest.Range> ranges
+    ) {
         ItemCollection itemCollection = search(bbox, intersects, datetime, MAX_VALUE, ids, collections, query, null, false, false, true);
 
         List<Aggregation> aggegationList = aggregations.stream().map(aggregationName -> {
             AggregationUtil aggregation = AggregationUtil.valueOf(aggregationName.toUpperCase());
 
-            return aggregation.apply(itemCollection.getFeatures().orElse(null));
+            return aggregation.apply(itemCollection.getFeatures().orElse(null), ranges);
         }).toList();
         return new AggregationCollection(aggegationList);
     }
