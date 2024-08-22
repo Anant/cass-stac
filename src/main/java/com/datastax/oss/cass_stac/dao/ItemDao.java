@@ -14,6 +14,9 @@ public interface ItemDao extends CassandraRepository<Item, ItemPrimaryKey> {
     @Query(value = "SELECT * FROM item where partition_id = :partition_id AND id = :id")
     List<Item> findItemByPartitionIdAndId(@Param("partition_id") final String partition_id, @Param("id") final String id);
 
+    @Query(value = "SELECT * FROM item where id in :id ALLOW FILTERING")
+    List<Item> findItemByIds(@Param("id") final List<String> id);
+
     @Query(value = "SELECT * FROM item WHERE partition_id = :partition_id ")
     List<Item> findItemByPartitionId(@Param("partition_id") String partitionId);
 

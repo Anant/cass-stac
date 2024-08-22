@@ -11,7 +11,10 @@ tasks:
        export CQLSH_PATH=./cqlsh-astra/
        mvn package -DskipTests=true
       )
-    command: . setup.sh && mvn spring-boot:run
+    command: |
+        . setup.sh
+        mvn spring-boot:run
 ports:
   - port: 8081
     onOpen: open-browser
+
