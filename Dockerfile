@@ -1,15 +1,15 @@
 # Use a Debian-based Java runtime as a parent image
-FROM openjdk:17-jdk-slim
+FROM ghcr.io/graalvm/jdk-community:22
 
 # Set environment variables
-ENV JAVA_HOME=/usr/local/openjdk-17
+ENV JAVA_HOME=/usr/lib64/graalvm/graalvm-community-java22
 ENV PATH=$JAVA_HOME/bin:$PATH
 ENV SDKMAN_DIR="/root/.sdkman"
 ENV PATH="$SDKMAN_DIR/bin:$PATH"
 ENV TERM=xterm
 
 # Install necessary packages including build tools and jq
-RUN apt-get update && apt-get install -y \
+RUN microdnf update && microdnf install -y \
     curl \
     tar \
     git \
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     maven \
     wget \
     jq \
-    && apt-get clean
+    && microdnf clean all
 
 # Manually download and set up Astra CLI (replace with correct URL)
 RUN curl -Ls "https://downloads.datastax.com/enterprise/astra-cli/latest/astra-cli-linux-amd64" -o /usr/local/bin/astra && \
@@ -30,7 +30,7 @@ RUN curl -O https://downloads.datastax.com/enterprise/cqlsh-astra-20221114-bin.t
 
 # Invalidate cache for Git repository download
 ADD https://api.github.com/repos/Anant/cass-stac/git/refs/heads/main version.json
-RUN rm -rf /app && mkdir -p /app && git clone -b main https://github.com/Anant/cass-stac.git /app
+RUN rm -rf /app && mkdir -p /app && cd /app && git clone -b main https://github.com/Anant/cass-stac.git /app
 
 # Create and set the working directory
 WORKDIR /app
