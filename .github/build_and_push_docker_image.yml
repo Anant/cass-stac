@@ -1,0 +1,32 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: 
+      - main
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+      - uses: actions/checkout@v4
+
+      - name: Build the Docker image
+        run: docker build --tag cass-stac --no-cache .
+
+      - name: Save images to tags
+        run: |
+          docker tag cass-stac anantcorp/cass-stac:${{ github.run_number }}
+          docker tag cass-stac anantcorp/cass-stac:latest
+
+      - name: Push images to Docker Hub
+        run: |
+          echo "::add-mask::${{ secrets.DOCKERHUB_USER }}"
+          echo "::add-mask::${{ secrets.DOCKERHUB_TOKEN }}"
+          docker login -u ${{ secrets.DOCKERHUB_USER }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+          docker push anantcorp/cass-stac:${{ github.run_number }}
+          docker push anantcorp/cass-stac:latest
