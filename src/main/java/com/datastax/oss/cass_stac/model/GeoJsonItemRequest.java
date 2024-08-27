@@ -7,14 +7,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.locationtech.jts.geom.Geometry;
 import org.n52.jackson.datatype.jts.JtsModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Objects;
 
 public class GeoJsonItemRequest extends PropertyObject {
-    private static final Logger logger = LoggerFactory.getLogger(GeoJsonItemRequest.class);
 
     @JsonProperty("type")
     private static final String TYPE = "Item";

@@ -23,12 +23,21 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.cassandra.core.CassandraTemplate;
+import org.springframework.data.cassandra.core.query.CassandraPageRequest;
+import org.springframework.data.cassandra.core.query.Criteria;
+import org.springframework.data.cassandra.core.query.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
@@ -45,6 +54,7 @@ public class ItemService {
     private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     private static final Set<String> datetimeFields = new HashSet<>(Arrays.asList("datetime", "start_datetime", "end_datetime", "created", "updated"));
+    private final CassandraTemplate cassandraTemplate;
 
     public ItemModelResponse getItemById(final String id) {
         final ItemId itemId = itemIdDao.findById(id)
@@ -211,7 +221,7 @@ public class ItemService {
     private ItemDto convertItemToDto(final Item item) throws IOException {
         JsonNode bbox = objectMapper.readValue(item.getAdditional_attributes(), JsonNode.class).get("bbox");
         List<Float> floatArray = null;
-        if (bbox.isArray()) {
+        if (bbox != null && bbox.isArray()) {
             floatArray = convertJsonNodeToFloatArray(bbox);
         }
         return ItemDto.builder()
@@ -257,26 +267,51 @@ public class ItemService {
                                  Boolean includeIds,
                                  Boolean includeObjects) {
 
-        List<Item> allItems = (ids != null) ? itemDao.findItemByIds(ids) : itemDao.findAll();
+        List<Item> allItems = new ArrayList<>();
 
-        if (intersects != null) {
-            allItems = allItems.stream().filter(_item -> GeometryUtil.fromGeometryByteBuffer(_item.getGeometry())
-                    .intersects(intersects)).toList();
-        }
-
-        if (collectionsArray != null) {
-            allItems = allItems.stream().filter(_item -> collectionsArray.contains(_item.getCollection())).toList();
-        }
+        Instant minDate = Instant.EPOCH;
+        Instant maxDate = Instant.now().plusSeconds(3155695200L);
 
         if (datetime != null && datetime.contains("/")) {
             String[] parts = datetime.split("/");
-            Instant start = parts[0].equals("..") ? Instant.EPOCH : Instant.parse(parts[0]);
-            Instant end = parts[1].equals("..") ? Instant.now().plusSeconds(3155695200L) : Instant.parse(parts[1]);
-            allItems = allItems.stream().filter(item -> item.getDatetime().compareTo(start) >= 0 && item.getDatetime().compareTo(end) <= 0).toList();
+            minDate = parts[0].equals("..") ? Instant.EPOCH : Instant.parse(parts[0]);
+            maxDate = parts[1].equals("..") ? Instant.now().plusSeconds(3155695200L) : Instant.parse(parts[1]);
         } else if (datetime != null) {
-            Instant instantDateTime = Instant.parse(datetime);
-            allItems = allItems.stream().filter(item -> item.getDatetime().equals(instantDateTime)).toList();
+            minDate = Instant.parse(datetime);
+            maxDate = Instant.parse(datetime);
         }
+
+        Query dbQuery = Query.empty().withAllowFiltering();
+
+        if (collectionsArray != null) {
+            dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray));
+        }
+
+        if (datetime != null) {
+            dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
+                    .and(Criteria.where("datetime").gte(minDate));
+        }
+
+        if (ids != null) {
+            dbQuery = dbQuery.and(Criteria.where("id").in(ids));
+        }
+
+        limit = limit == null? 10 : limit;
+        Pageable pageable = PageRequest.of(0, limit);
+        Slice<Item> itemPage;
+
+        do {
+            // Fetch a page of items
+            itemPage = cassandraTemplate.slice(dbQuery.pageRequest(pageable), Item.class);
+
+            // Add the current page content to the list
+            allItems.addAll(itemPage.getContent());
+
+            // Move to the next page
+            pageable = itemPage.hasNext() ? itemPage.nextPageable() : null;
+
+        } while (pageable != null);
+
 
         if (bbox != null) {
             allItems = allItems.stream().filter(_item -> {
@@ -355,9 +390,9 @@ public class ItemService {
 
         List<String> partitions = switch (request.getGeometry().getGeometryType()) {
             case "Point" ->
-                    getPointPartitions(request, minDate, maxDate, objectTypeFilter, whereClause, bindVars, useCentroid, filterObjectsByPolygon);
+                    getPointPartitions(request.getGeometry(), minDate, maxDate, objectTypeFilter, whereClause, bindVars, useCentroid, filterObjectsByPolygon);
             case "Polygon" ->
-                    getPolygonPartitions(request, minDate, maxDate, objectTypeFilter, whereClause, bindVars, useCentroid, filterObjectsByPolygon);
+                    getPolygonPartitions(request.getGeometry(), minDate, maxDate, objectTypeFilter, whereClause, bindVars, useCentroid, filterObjectsByPolygon);
             default -> throw new IllegalStateException("Unexpected value: " + request.getGeometry().getGeometryType());
         };
         Optional<List<Item>> items = includeObjects
@@ -372,7 +407,7 @@ public class ItemService {
     }
 
     private List<String> getPointPartitions(
-            ItemModelRequest request,
+            Geometry geometry,
             OffsetDateTime minDate,
             OffsetDateTime maxDate,
             List<String> objectTypeFilter,
@@ -383,7 +418,6 @@ public class ItemService {
         final int geoResolution = 6;
         final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
 
-        Geometry geometry = request.getGeometry();
         Point point = geometry.getFactory().createPoint(geometry.getCoordinate());
         return Collections.singletonList(minDate != null
                 ? new GeoTimePartition(geoResolution, timeResolution).getGeoTimePartitionForPoint(point, minDate)
@@ -391,7 +425,7 @@ public class ItemService {
     }
 
     private List<String> getPolygonPartitions(
-            ItemModelRequest request,
+            Geometry geometry,
             OffsetDateTime minDate,
             OffsetDateTime maxDate,
             List<String> objectTypeFilter,
@@ -402,11 +436,9 @@ public class ItemService {
         final int geoResolution = 6;
         final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
 
-        Geometry geometry = request.getGeometry();
         Polygon polygon = geometry.getFactory().createPolygon(geometry.getCoordinates());
         return (maxDate != null && minDate != null) ? new GeoTimePartition(geoResolution, timeResolution)
                 .getGeoTimePartitions(polygon, minDate, maxDate) : new GeoPartition(geoResolution).getGeoPartitions(polygon);
-
     }
 
     public AggregationCollection agg(

@@ -3,6 +3,7 @@ package com.datastax.oss.cass_stac.controller;
 import com.datastax.oss.cass_stac.entity.ItemCollection;
 import com.datastax.oss.cass_stac.model.ItemSearchRequest;
 import com.datastax.oss.cass_stac.service.ItemService;
+import com.datastax.oss.cass_stac.util.GeoJsonParser;
 import com.datastax.oss.cass_stac.util.SortUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,9 +14,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.locationtech.jts.geom.Geometry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.cassandra.core.query.CassandraPageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
@@ -83,11 +85,15 @@ public class SearchController {
                                                                                    [
                                                                                        144.838158,
                                                                                        -37.927719
+                                                                                   ],
+                                                                                   [
+                                                                                       144.81543,
+                                                                                       -37.927299
                                                                                    ]
                                                                                ]
                                                                            ]
                                                                        }
-                                                                   """, description = "Search items that intersect this polygon, coordinates should be of length 4")}) @RequestParam(required = false) Geometry intersects,
+                                                                   """, description = "Search items that intersect this polygon, coordinates should be of length 4")}) @RequestParam(required = false) String intersects,
                                            @Parameter(description = "Either a date-time or an interval, open or closed. Date and time expressions adhere to RFC 3339. Open intervals are expressed using double-dots.",
                                                    examples = {
                                                            @ExampleObject(name = "A closed interval", value = "2023-01-30T00:00:00Z/2018-03-18T12:31:12Z"),
@@ -109,7 +115,7 @@ public class SearchController {
         try {
             ItemCollection response = itemService.search(
                     bbox,
-                    intersects,
+                    GeoJsonParser.parseGeometry(intersects),
                     datetime,
                     limit,
                     ids,

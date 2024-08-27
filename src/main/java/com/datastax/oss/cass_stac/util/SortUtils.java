@@ -2,10 +2,12 @@ package com.datastax.oss.cass_stac.util;
 
 import com.datastax.oss.cass_stac.entity.Item;
 import com.datastax.oss.cass_stac.entity.SortBy;
+import org.springframework.data.domain.Sort;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class SortUtils {
@@ -27,17 +29,18 @@ public class SortUtils {
                 .sorted(comparator)
                 .collect(Collectors.toList());
     }
+
     private static Comparator<Item> getComparatorForField(String field) {
         if (field.contains(".")) {
             String[] fields = field.split("\\.");
             return switch (fields[0]) {
-                case  "properties" ->  Comparator.comparing(Item::getProperties);
+                case "properties" -> Comparator.comparing(Item::getProperties);
                 case "additional_attributes" -> Comparator.comparing(Item::getAdditional_attributes);
                 default -> throw new IllegalArgumentException("Invalid sort field: " + field);
             };
-        }else{
+        } else {
             return switch (field) {
-                // TODO compare Ids
+                case "id" -> Comparator.comparing(item -> item.getId().getId());
                 case "collection" -> Comparator.comparing(Item::getCollection);
                 case "datetime" -> Comparator.comparing(Item::getDatetime);
                 case "properties" -> Comparator.comparing(Item::getProperties);
