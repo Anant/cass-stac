@@ -83,7 +83,7 @@ public class ItemService {
         }
     }
     
-    @Async
+    @Async("asyncExecutor")
     public CompletableFuture<ItemModelResponse> getItemsByIdParallel(final String id) {
         final ItemId itemId = itemIdDao.findById(id)
                 .orElseThrow(() -> new RuntimeException(id + " is not found"));
