@@ -281,23 +281,19 @@ public class ItemService {
             maxDate = Instant.parse(datetime);
         }
 
-        Query dbQuery = Query.empty().withAllowFiltering();
+        Query dbQuery = Query.empty();
 
         if (collectionsArray != null) {
-            dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray));
+            dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray)).withAllowFiltering();
         }
 
         if (datetime != null) {
             dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
-                    .and(Criteria.where("datetime").gte(minDate));
+                    .and(Criteria.where("datetime").gte(minDate)).withAllowFiltering();
         }
 
-        if (ids != null) {
-            dbQuery = dbQuery.and(Criteria.where("id").in(ids));
-        }
-
-        limit = limit == null? 10 : limit;
-        Pageable pageable = PageRequest.of(0, limit);
+        limit = limit == null ? 10 : limit;
+        Pageable pageable = PageRequest.of(0, 1500);
         Slice<Item> itemPage;
 
         do {
@@ -312,22 +308,28 @@ public class ItemService {
 
         } while (pageable != null);
 
+        allItems = allItems.stream().filter(_item -> {
+            boolean valid = true;
+            if (ids != null) {
+                valid = ids.contains(_item.getId().getId());
+            }
 
-        if (bbox != null) {
-            allItems = allItems.stream().filter(_item -> {
+            if (intersects != null)
+                valid = GeometryUtil.fromGeometryByteBuffer(_item.getGeometry())
+                        .intersects(intersects);
+
+            if (bbox != null) {
                 ItemDto itemDto;
                 try {
                     itemDto = convertItemToDto(_item);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                return BboxIntersects(itemDto.getBbox(), bbox);
-            }).toList();
-        }
+                valid = BboxIntersects(itemDto.getBbox(), bbox);
+            }
 
-        if (query != null) {
-            QueryEvaluator evaluator = new QueryEvaluator();
-            allItems = allItems.stream().filter(_item -> {
+            if (query != null) {
+                QueryEvaluator evaluator = new QueryEvaluator();
                 Map<String, Object> additionalAttributes;
                 JsonNode attributes;
                 try {
@@ -337,9 +339,11 @@ public class ItemService {
                 }
                 additionalAttributes = objectMapper.convertValue(attributes, new TypeReference<>() {
                 });
-                return evaluator.evaluate(query, additionalAttributes);
-            }).toList();
-        }
+                valid = evaluator.evaluate(query, additionalAttributes);
+            }
+            return valid;
+        }).toList();
+
 
         if (sort != null) {
             allItems = SortUtils.sortItems(allItems, sort);
@@ -451,6 +455,9 @@ public class ItemService {
             List<String> aggregations,
             List<AggregateRequest.Range> ranges
     ) {
+        if (datetime.isEmpty())
+            throw new RuntimeException("datetime is required to filter out data");
+
         ItemCollection itemCollection = search(bbox, intersects, datetime, MAX_VALUE, ids, collections, query, null, false, false, true);
 
         List<Aggregation> aggegationList = aggregations.stream().map(aggregationName -> {
