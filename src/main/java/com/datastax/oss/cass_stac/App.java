@@ -85,6 +85,8 @@ public class App implements CommandLineRunner{
 		final String item_centroid_create_index_statement = """
 				CREATE CUSTOM INDEX IF NOT EXISTS item_centroid_ann_idx ON item (centroid) USING 'org.apache.cassandra.index.sai.StorageAttachedIndex' WITH OPTIONS = {'similarity_function': 'euclidean'}
 				""";
+		final String item_id_idx_create_index_statement = """
+				CREATE CUSTOM INDEX IF NOT EXISTS item_id_idx ON item (id) USING 'org.apache.cassandra.index.sai.StorageAttachedIndex'""";
 
 		CqlSession cqlSession = cqlSessionBuilder.build();
 
@@ -106,6 +108,8 @@ public class App implements CommandLineRunner{
 			log.info("Verification of Item_properties_datetime index is successful");
 			cqlSession.execute(item_centroid_create_index_statement);
 			log.info("Verification of Item_centroid index is successful");
+			cqlSession.execute(item_id_idx_create_index_statement);
+			log.info("Verification of item_id_idx index is successful");
 		} catch(Exception ex) {
 			log.error(ex.getLocalizedMessage());
 			System.exit(1);
