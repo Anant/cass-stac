@@ -44,6 +44,10 @@ import java.util.*;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.min;
 
+import java.util.concurrent.CompletableFuture;
+import org.springframework.scheduling.annotation.Async;
+
+
 @Service
 @RequiredArgsConstructor
 public class ItemService {
@@ -74,6 +78,30 @@ public class ItemService {
 
         try {
             return new ItemModelResponse(id, collection, geometry.toString(), propertiesString, additionalAttributesString);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e.getLocalizedMessage());
+        }
+    }
+    
+    @Async
+    public CompletableFuture<ItemModelResponse> getItemsByIdParallel(final String id) {
+        final ItemId itemId = itemIdDao.findById(id)
+                .orElseThrow(() -> new RuntimeException(id + " is not found"));
+        final String partitionId = itemId.getPartition_id();
+        final ItemPrimaryKey pk = new ItemPrimaryKey();
+        pk.setPartition_id(partitionId);
+        pk.setId(id);
+        final Item item = itemDao.findById(pk)
+                .orElseThrow(() -> new RuntimeException("There are no item found for the " + id));
+        final String collection = item.getCollection();
+        final ByteBuffer geometryByteBuffer = item.getGeometry();
+        final Geometry geometry = GeometryUtil.fromGeometryByteBuffer(geometryByteBuffer);
+
+        final String propertiesString = item.getProperties();
+        final String additionalAttributesString = item.getAdditional_attributes();
+
+        try {
+            return CompletableFuture.completedFuture(new ItemModelResponse(id, collection, geometry.toString(), propertiesString, additionalAttributesString));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e.getLocalizedMessage());
         }
