@@ -24,6 +24,7 @@ import org.locationtech.jts.geom.Polygon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.cassandra.core.CassandraTemplate;
+import org.springframework.data.cassandra.core.query.CassandraPageRequest;
 import org.springframework.data.cassandra.core.query.Criteria;
 import org.springframework.data.cassandra.core.query.Query;
 import org.springframework.data.domain.PageRequest;
@@ -307,41 +308,46 @@ public class ItemService {
             maxDate = Instant.parse(datetime);
         }
 
-        Query dbQuery = Query.empty();
-
-        if (collectionsArray != null) {
-            dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray)).withAllowFiltering();
-        }
-
-        if (datetime != null) {
-            dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
-                    .and(Criteria.where("datetime").gte(minDate)).withAllowFiltering();
-        }
-        if (ids != null && !ids.isEmpty()) {
-            dbQuery.and(Criteria.where("id").in(ids));
-        }
-
         limit = limit == null ? 10 : limit;
         Pageable pageable = PageRequest.of(0, 1500);
+        Slice<Item> itemPage;
         try {
             do {
                 final Pageable currentPageable = pageable;
 
-                Query finalDbQuery = dbQuery;
-                Future<List<Item>> future = executorService.submit(() -> {
-                    Slice<Item> itemPage = cassandraTemplate.slice(finalDbQuery.pageRequest(currentPageable), Item.class);
-                    return itemPage.getContent();
-                });
+                // Build the query, applying the id filter if provided
+                Query dbQuery = Query.empty().pageRequest(currentPageable);
 
+                if (collectionsArray != null) {
+                    dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray)).withAllowFiltering();
+                }
+
+                if (datetime != null) {
+                    dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
+                            .and(Criteria.where("datetime").gte(minDate))
+                            .withAllowFiltering();
+                }
+                if (ids != null && !ids.isEmpty()) {
+                    dbQuery.and(Criteria.where("id").in(ids));
+                }
+
+                if (ids != null && !ids.isEmpty()) {
+                    dbQuery.and(Criteria.where("id").in(ids));
+                }
+                itemPage = cassandraTemplate.slice(dbQuery, Item.class);
+
+                Slice<Item> finalItemPage = itemPage;
+                Future<List<Item>> future = executorService.submit(finalItemPage::getContent);
                 futures.add(future);
-
-                pageable = cassandraTemplate.slice(dbQuery.pageRequest(pageable), Item.class).hasNext()
-                        ? pageable.next()
+                pageable = itemPage.hasNext()
+                        ? ((CassandraPageRequest) finalItemPage.getPageable()).next()
                         : null;
 
             } while (pageable != null);
+
+            // Combine the results from all threads
             for (Future<List<Item>> future : futures) {
-                allItems.addAll(future.get());
+                allItems.addAll(future.get()); // get() will block until the task is done
             }
 
         } catch (InterruptedException | ExecutionException e) {
