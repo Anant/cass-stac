@@ -24,28 +24,24 @@ import org.locationtech.jts.geom.Polygon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.cassandra.core.CassandraTemplate;
-import org.springframework.data.cassandra.core.query.CassandraPageRequest;
 import org.springframework.data.cassandra.core.query.Criteria;
 import org.springframework.data.cassandra.core.query.Query;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.concurrent.*;
 
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.min;
-
-import java.util.concurrent.CompletableFuture;
-import org.springframework.scheduling.annotation.Async;
 
 
 @Service
@@ -82,7 +78,7 @@ public class ItemService {
             throw new RuntimeException(e.getLocalizedMessage());
         }
     }
-    
+
     @Async("asyncExecutor")
     public CompletableFuture<ItemModelResponse> getItemsByIdParallel(final String id) {
         final ItemId itemId = itemIdDao.findById(id)
@@ -296,6 +292,8 @@ public class ItemService {
                                  Boolean includeObjects) {
 
         List<Item> allItems = new ArrayList<>();
+        List<Future<List<Item>>> futures = new ArrayList<>();
+        ExecutorService executorService = Executors.newFixedThreadPool(20); // Adjust the thread pool size as needed
 
         Instant minDate = Instant.EPOCH;
         Instant maxDate = Instant.now().plusSeconds(3155695200L);
@@ -319,28 +317,45 @@ public class ItemService {
             dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
                     .and(Criteria.where("datetime").gte(minDate)).withAllowFiltering();
         }
+        if (ids != null && !ids.isEmpty()) {
+            dbQuery.and(Criteria.where("id").in(ids));
+        }
 
         limit = limit == null ? 10 : limit;
         Pageable pageable = PageRequest.of(0, 1500);
-        Slice<Item> itemPage;
+        try {
+            do {
+                final Pageable currentPageable = pageable;
 
-        do {
-            // Fetch a page of items
-            itemPage = cassandraTemplate.slice(dbQuery.pageRequest(pageable), Item.class);
+                Query finalDbQuery = dbQuery;
+                Future<List<Item>> future = executorService.submit(() -> {
+                    Slice<Item> itemPage = cassandraTemplate.slice(finalDbQuery.pageRequest(currentPageable), Item.class);
+                    return itemPage.getContent();
+                });
 
-            // Add the current page content to the list
-            allItems.addAll(itemPage.getContent());
+                futures.add(future);
 
-            // Move to the next page
-            pageable = itemPage.hasNext() ? itemPage.nextPageable() : null;
+                pageable = cassandraTemplate.slice(dbQuery.pageRequest(pageable), Item.class).hasNext()
+                        ? pageable.next()
+                        : null;
 
-        } while (pageable != null);
+            } while (pageable != null);
+            for (Future<List<Item>> future : futures) {
+                allItems.addAll(future.get());
+            }
+
+        } catch (InterruptedException | ExecutionException e) {
+            logger.error("Error during parallel pagination", e);
+            Thread.currentThread().interrupt();
+        } finally {
+            executorService.shutdown();
+        }
 
         allItems = allItems.stream().filter(_item -> {
             boolean valid = true;
-            if (ids != null) {
-                valid = ids.contains(_item.getId().getId());
-            }
+//            if (ids != null) {
+//                valid = ids.contains(_item.getId().getId());
+//            }
 
             if (intersects != null)
                 valid = GeometryUtil.fromGeometryByteBuffer(_item.getGeometry())
