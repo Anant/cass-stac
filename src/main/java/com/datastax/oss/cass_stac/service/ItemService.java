@@ -24,6 +24,7 @@ import org.locationtech.jts.geom.Polygon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.cassandra.core.CassandraTemplate;
+import org.springframework.data.cassandra.core.query.CassandraPageRequest;
 import org.springframework.data.cassandra.core.query.Criteria;
 import org.springframework.data.cassandra.core.query.Query;
 import org.springframework.data.domain.PageRequest;
@@ -293,7 +294,7 @@ public class ItemService {
 
         List<Item> allItems = new ArrayList<>();
         List<Future<List<Item>>> futures = new ArrayList<>();
-        ExecutorService executorService = Executors.newFixedThreadPool(20); // Adjust the thread pool size as needed
+        ExecutorService executorService = Executors.newFixedThreadPool(20);
 
         Instant minDate = Instant.EPOCH;
         Instant maxDate = Instant.now().plusSeconds(3155695200L);
@@ -307,41 +308,45 @@ public class ItemService {
             maxDate = Instant.parse(datetime);
         }
 
-        Query dbQuery = Query.empty();
-
-        if (collectionsArray != null) {
-            dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray)).withAllowFiltering();
-        }
-
-        if (datetime != null) {
-            dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
-                    .and(Criteria.where("datetime").gte(minDate)).withAllowFiltering();
-        }
-        if (ids != null && !ids.isEmpty()) {
-            dbQuery.and(Criteria.where("id").in(ids));
-        }
-
         limit = limit == null ? 10 : limit;
         Pageable pageable = PageRequest.of(0, 1500);
+        Slice<Item> itemPage;
         try {
             do {
                 final Pageable currentPageable = pageable;
 
-                Query finalDbQuery = dbQuery;
-                Future<List<Item>> future = executorService.submit(() -> {
-                    Slice<Item> itemPage = cassandraTemplate.slice(finalDbQuery.pageRequest(currentPageable), Item.class);
-                    return itemPage.getContent();
-                });
+                Query dbQuery = Query.empty().pageRequest(currentPageable);
 
+                if (collectionsArray != null) {
+                    dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray)).withAllowFiltering();
+                }
+
+                if (datetime != null) {
+                    dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
+                            .and(Criteria.where("datetime").gte(minDate))
+                            .withAllowFiltering();
+                }
+                if (ids != null && !ids.isEmpty()) {
+                    dbQuery.and(Criteria.where("id").in(ids));
+                }
+
+                if (ids != null && !ids.isEmpty()) {
+                    dbQuery.and(Criteria.where("id").in(ids));
+                }
+                itemPage = cassandraTemplate.slice(dbQuery, Item.class);
+
+                Future<List<Item>> future = executorService.submit(itemPage::getContent);
                 futures.add(future);
-
-                pageable = cassandraTemplate.slice(dbQuery.pageRequest(pageable), Item.class).hasNext()
-                        ? pageable.next()
+                pageable = itemPage.hasNext()
+                        ? ((CassandraPageRequest) itemPage.getPageable()).next()
                         : null;
 
             } while (pageable != null);
             for (Future<List<Item>> future : futures) {
-                allItems.addAll(future.get());
+                if (future.isDone()) {
+                    allItems.addAll(future.get());
+                }
+                logger.info(String.valueOf(allItems.size()));
             }
 
         } catch (InterruptedException | ExecutionException e) {
