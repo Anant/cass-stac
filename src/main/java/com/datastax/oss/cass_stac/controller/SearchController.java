@@ -16,8 +16,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.cassandra.core.query.CassandraPageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
@@ -26,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequiredArgsConstructor
@@ -113,7 +112,7 @@ public class SearchController {
 
         SortUtils sortUtils = new SortUtils();
         try {
-            ItemCollection response = itemService.search(
+            CompletableFuture<ItemCollection> response = itemService.search(
                     bbox,
                     GeoJsonParser.parseGeometry(intersects),
                     datetime,
@@ -125,7 +124,7 @@ public class SearchController {
                     includeCount,
                     includeIds,
                     includeObjects);
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return new ResponseEntity<>(response.get(), HttpStatus.OK);
         } catch (Exception ex) {
             final Map<String, String> message = new HashMap<>();
             logger.error("Failed to fetch partitions.", ex);
@@ -157,7 +156,7 @@ public class SearchController {
 
         final Map<String, String> message = new HashMap<>();
         try {
-            ItemCollection response = itemService.search(
+            CompletableFuture<ItemCollection> response = itemService.search(
                     request.getBbox(),
                     request.getIntersects(),
                     request.getDatetime(),
@@ -169,7 +168,7 @@ public class SearchController {
                     includeCount,
                     includeIds,
                     includeObjects);
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return new ResponseEntity<>(response.get(), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("Failed to fetch partitions.", ex);
             message.put("message", ex.getLocalizedMessage());

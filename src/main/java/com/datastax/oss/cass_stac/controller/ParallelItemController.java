@@ -1,26 +1,21 @@
 package com.datastax.oss.cass_stac.controller;
 
-import com.datastax.oss.cass_stac.model.ImageResponse;
-import com.datastax.oss.cass_stac.model.ItemModelRequest;
 import com.datastax.oss.cass_stac.model.ItemModelResponse;
 import com.datastax.oss.cass_stac.service.ItemService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -32,9 +27,7 @@ import java.util.stream.Collectors;
 @Schema(hidden = true)
 public class ParallelItemController {
 
-    private static final Logger logger = LoggerFactory.getLogger(ItemController.class);
     private final ItemService itemService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Operation(description = "Get method to fetch Item data in parallel based on a list of item IDs")
     @GetMapping

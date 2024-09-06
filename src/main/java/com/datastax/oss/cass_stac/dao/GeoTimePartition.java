@@ -2,16 +2,20 @@ package com.datastax.oss.cass_stac.dao;
 
 
 import org.jetbrains.annotations.NotNull;
-import org.locationtech.jts.geom.*;
-import java.time.*;
-import java.time.temporal.IsoFields;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
+
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.IsoFields;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class GeoTimePartition extends GeoPartition {
+
     public enum TimeResolution {
         DAY, WEEK, FORTNIGHT, MONTH, QUARTER, YEAR
     }
@@ -41,6 +45,18 @@ public class GeoTimePartition extends GeoPartition {
         String spatialIndex = getGeoPartitionForPoint(point);
         String temporalIndex = getTimePartition(dateTime.toLocalDate());
         return spatialIndex + "-" + temporalIndex;
+    }
+
+    public List<String> getGeoTimePartitionsForPoint(@NotNull Point point, @NotNull OffsetDateTime minDateTime,  @NotNull OffsetDateTime maxDateTime) {
+        String spatialIndex = getGeoPartitionForPoint(point);
+        List<String> timePartitions = getDateRange(minDateTime, maxDateTime)
+                .map(this::getTimePartition)
+                .distinct()
+                .toList();
+
+        return timePartitions.stream()
+                .map(timePartition -> spatialIndex + "-" + timePartition)
+                .collect(Collectors.toList());
     }
 
     public Stream<String> streamGeoTimePartitions(@NotNull Polygon polygon, @NotNull OffsetDateTime minDateTime, @NotNull OffsetDateTime maxDateTime) {
