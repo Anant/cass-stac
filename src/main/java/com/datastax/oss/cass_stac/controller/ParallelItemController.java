@@ -35,7 +35,7 @@ public class ParallelItemController {
         try {
             final List<ItemModelResponse> itemModels = ids.stream()
 		    .map(itemService::getItemsByIdParallel)
-		    .collect(Collectors.toList()).stream().map(CompletableFuture::join).collect(Collectors.toList());
+		    .toList().stream().map(CompletableFuture::join).collect(Collectors.toList());
             return new ResponseEntity<>(itemModels, HttpStatus.OK);
         } catch (Exception ex) {
             final Map<String, String> message = new HashMap<>();

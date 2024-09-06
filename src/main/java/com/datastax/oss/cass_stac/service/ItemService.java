@@ -284,57 +284,67 @@ public class ItemService {
         return result;
     }
 
-    public List<String> getPartitions(Geometry intersects, Map<String, String> dateTimes) {
+    public List<String> getPartitions(Geometry intersects, List<String> ids, Map<String, String> dateTimes) {
         final GeoTimePartition partitioner = new GeoTimePartition();
-        return switch (intersects.getGeometryType()) {
-            case "Point":
-                yield partitioner.getGeoTimePartitionsForPoint(intersects.getCentroid(),
-                        OffsetDateTime.parse(dateTimes.get("minOffsetDate")),
-                        OffsetDateTime.parse(dateTimes.get("maxOffsetDate")));
-            case "Polygon":
-                yield partitioner.getGeoTimePartitions(intersects.getFactory().createPolygon(intersects.getCoordinates()),
-                        OffsetDateTime.parse(dateTimes.get("minOffsetDate")),
-                        OffsetDateTime.parse(dateTimes.get("maxOffsetDate")));
-            default:
-                throw new IllegalStateException("Unexpected value: " + intersects.getGeometryType());
-        };
+        List<String> partitions = new ArrayList<>();
+        if (intersects != null)
+            switch (intersects.getGeometryType()) {
+                case "Point":
+                    partitions = partitioner.getGeoTimePartitionsForPoint(intersects.getCentroid(),
+                            OffsetDateTime.parse(dateTimes.get("minOffsetDate")),
+                            OffsetDateTime.parse(dateTimes.get("maxOffsetDate")));
+                case "Polygon":
+                    partitions = partitioner.getGeoTimePartitions(intersects.getFactory().createPolygon(intersects.getCoordinates()),
+                            OffsetDateTime.parse(dateTimes.get("minOffsetDate")),
+                            OffsetDateTime.parse(dateTimes.get("maxOffsetDate")));
+            }
+        if (ids != null) {
+            partitions.addAll(ids.stream().map(id -> {
+                final ItemId itemId = itemIdDao.findById(id).orElse(null);
+                if (itemId != null) {
+                    return itemId.getPartition_id();
+                }
+                return null;
+            }).filter(Objects::nonNull).toList());
+        }
+        return partitions;
     }
 
-    private Slice<Item> fetchItemsForPartition(String partitionId,
+//    private Slice<Item> fetchItemsForPartition(String partitionId,
+    private List<Item> fetchItemsForPartition(String partitionId,
                                                List<Float> bbox,
                                                Instant minDate,
                                                Instant maxDate,
                                                List<String> ids,
                                                List<String> collectionsArray,
                                                Integer pageSize) {
-        Pageable pageable = PageRequest.of(0, pageSize);
-        Slice<Item> itemPage;
-        do {
-            final Pageable currentPageable = pageable;
+//        Pageable pageable = PageRequest.of(0, pageSize);
+//        Slice<Item> itemPage;
+        List<Item> itemPage;
+//        do {
+//            final Pageable currentPageable = pageable;
 
-            Query dbQuery = Query.query(Criteria.where("partition_id").is(partitionId)).pageRequest(currentPageable);
+        Query dbQuery = Query.query(Criteria.where("partition_id").is(partitionId));
+//                    .pageRequest(currentPageable);
 
-            if (collectionsArray != null) {
-                dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray)).withAllowFiltering();
-            }
+        if (collectionsArray != null) {
+            dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray));
+        }
 
-            dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
-                    .and(Criteria.where("datetime").gte(minDate))
-                    .withAllowFiltering();
-            if (ids != null && !ids.isEmpty()) {
-                dbQuery.and(Criteria.where("id").in(ids));
-            }
+        dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
+                .and(Criteria.where("datetime").gte(minDate));
 
-            if (ids != null && !ids.isEmpty()) {
-                dbQuery.and(Criteria.where("id").in(ids));
-            }
-            itemPage = cassandraTemplate.slice(dbQuery, Item.class);
+        if (ids != null && !ids.isEmpty()) {
+            dbQuery.and(Criteria.where("id").in(ids));
+        }
+//            itemPage = cassandraTemplate.slice(dbQuery, Item.class);
+        itemPage = cassandraTemplate.select(dbQuery, Item.class);
 
-            pageable = itemPage.hasNext()
-                    ? ((CassandraPageRequest) itemPage.getPageable()).next()
-                    : null;
-
-        } while (pageable != null);
+//            pageable = itemPage.hasNext()
+//                    ? ((CassandraPageRequest) itemPage.getPageable()).next()
+//                    : null;
+//
+//        } while (pageable != null);
 
         return itemPage;
     }
@@ -369,19 +379,21 @@ public class ItemService {
                                                     Boolean includeIds,
                                                     Boolean includeObjects) throws ExecutionException, InterruptedException {
 
-        List<CompletableFuture<Slice<Item>>> futures = new ArrayList<>();
+//        List<CompletableFuture<Slice<Item>>> futures = new ArrayList<>();
+        List<CompletableFuture<List<Item>>> futures = new ArrayList<>();
         limit = limit == null ? 10 : limit;
 
         if (datetime == null)
             throw new RuntimeException("datetime is required to filter out data");
 
         Map<String, String> dateTimes = parseDatetime(datetime);
-        List<String> partitionIds = getPartitions(intersects, dateTimes);
+        List<String> partitionIds = getPartitions(intersects, ids, dateTimes);
 
         assert partitionIds != null;
         for (String partitionId : partitionIds) {
             Integer finalLimit = limit;
-            CompletableFuture<Slice<Item>> partitionFuture = CompletableFuture.supplyAsync(() ->
+//            CompletableFuture<Slice<Item>> partitionFuture = CompletableFuture.supplyAsync(() ->
+            CompletableFuture<List<Item>> partitionFuture = CompletableFuture.supplyAsync(() ->
                     fetchItemsForPartition(partitionId, bbox, Instant.parse(dateTimes.get("minDate")), Instant.parse(dateTimes.get("maxDate")), ids, collectionsArray, finalLimit));
             futures.add(partitionFuture);
         }

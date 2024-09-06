@@ -90,9 +90,9 @@ public class App implements CommandLineRunner{
 
 		CqlSession cqlSession = cqlSessionBuilder.build();
 
-		// Execute for Table
 		try {
-			cqlSession.execute(item_create_table_statement);
+			// Execute for Table
+ 			cqlSession.execute(item_create_table_statement);
 			log.info("Verification of Item table is successful");
 			cqlSession.execute(itemids_create_table_statement);
 			log.info("Verification of Item_ids table is successful");
