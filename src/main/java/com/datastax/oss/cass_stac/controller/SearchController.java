@@ -16,8 +16,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.cassandra.core.query.CassandraPageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
@@ -26,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequiredArgsConstructor
@@ -96,7 +95,7 @@ public class SearchController {
                                                                    """, description = "Search items that intersect this polygon, coordinates should be of length 4")}) @RequestParam(required = false) String intersects,
                                            @Parameter(description = "Either a date-time or an interval, open or closed. Date and time expressions adhere to RFC 3339. Open intervals are expressed using double-dots.",
                                                    examples = {
-                                                           @ExampleObject(name = "A closed interval", value = "2023-01-30T00:00:00Z/2018-03-18T12:31:12Z"),
+                                                           @ExampleObject(name = "A closed interval", value = "2018-03-18T12:31:12Z/2023-01-30T00:00:00Z"),
                                                            @ExampleObject(name = "Open intervals", value = """
                                                                    "2023-01-30T00:00:00Z/.." or "../2023-01-30T12:31:12Z
                                                                    """),

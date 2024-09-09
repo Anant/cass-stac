@@ -39,7 +39,9 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.min;
@@ -142,9 +144,7 @@ public class ItemService {
     }
 
     private Item convertItemModelRequestToItem(final ItemModelRequest itemModel) {
-        final int geoResolution = 6;
-        final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
-        final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
+        final GeoTimePartition partitioner = new GeoTimePartition();
         if (itemModel.getContent() != null && itemModel.getContent().getOrDefault("properties", null) != null)
             itemModel.setProperties((Map<String, Object>) itemModel.getContent().get("properties"));
         final PropertyUtil propertyUtil = new PropertyUtil(propertyIndexMap, itemModel);
@@ -263,6 +263,91 @@ public class ItemService {
     }
 
 
+    public Map<String, String> parseDatetime(String datetime) {
+        Map<String, String> result = new HashMap<>();
+
+        if (datetime == null)
+            throw new RuntimeException("datetime is required to filter out data");
+
+        if (datetime.contains("/")) {
+            String[] parts = datetime.split("/");
+	    Instant rangeCenter = Instant.parse("2023-01-01T00:00:00.00Z");
+
+            result.put("minDate", parts[0].equals("..") ? rangeCenter.minusSeconds(15770000L).toString() : parts[0]);
+            result.put("minOffsetDate", parts[0].equals("..") ? rangeCenter.minusSeconds(15770000L).toString() : parts[0]);
+            result.put("maxDate", parts[1].equals("..") ? rangeCenter.plusSeconds(15770000L).toString() : parts[1]);
+            result.put("maxOffsetDate", parts[1].equals("..") ? rangeCenter.plusSeconds(15770000L).toString() : parts[1]);
+        } else {
+            result.put("minDate", datetime);
+            result.put("minOffsetDate", datetime);
+            result.put("maxDate", datetime);
+            result.put("maxOffsetDate", datetime);
+        }
+	logger.info(result.get("minDate").toString());
+        logger.info(result.get("minOffsetDate").toString());
+        logger.info(result.get("maxDate").toString());
+        logger.info(result.get("maxOffsetDate").toString());
+        return result;
+    }
+
+    public List<String> getPartitions(Geometry intersects, List<String> ids, Map<String, String> dateTimes) {
+        final GeoTimePartition partitioner = new GeoTimePartition();
+        List<String> partitions = new ArrayList<>();
+        if (intersects != null && ids == null)
+            partitions = switch (intersects.getGeometryType()) {
+                case "Point":
+                     yield partitioner.getGeoTimePartitionsForPoint(intersects.getCentroid(),
+                            OffsetDateTime.parse(dateTimes.get("minOffsetDate")),
+                            OffsetDateTime.parse(dateTimes.get("maxOffsetDate")));
+                case "Polygon":
+                    yield partitioner.getGeoTimePartitions(intersects.getFactory().createPolygon(intersects.getCoordinates()),
+                            OffsetDateTime.parse(dateTimes.get("minOffsetDate")),
+                            OffsetDateTime.parse(dateTimes.get("maxOffsetDate")));
+                default:
+                    throw new IllegalStateException("Unexpected value: " + intersects.getGeometryType());
+            };
+        else if (ids != null) {
+            partitions = new ArrayList<>(ids.stream().map(id -> {
+                final ItemId itemId = itemIdDao.findById(id).orElse(null);
+                if (itemId != null) {
+                    return itemId.getPartition_id();
+                }
+                return null;
+            }).filter(Objects::nonNull).toList());
+        }
+        logger.info(partitions.toString());
+        logger.info(String.valueOf(partitions.size()));
+        return partitions.stream().distinct().toList();
+    }
+
+    private List<Item> fetchItemsForPartition(String partitionId,
+                                              List<Float> bbox,
+                                              Instant minDate,
+                                              Instant maxDate,
+                                              List<String> collectionsArray,
+                                              Integer pageSize) {
+        List<Item> itemPage;
+
+        Query dbQuery = Query.query(Criteria.where("partition_id").is(partitionId))
+;
+        if (collectionsArray != null) {
+            dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray));
+        }
+
+        dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
+                .and(Criteria.where("datetime").gte(minDate));
+
+        logger.info("dbQuery.toString()");
+        logger.info(dbQuery.toString());
+        itemPage = cassandraTemplate.select(dbQuery, Item.class);
+
+        logger.info("itemPage.toString()");
+        logger.info(itemPage.toString());
+
+
+        return itemPage;
+    }
+
     /**
      * search within all items, items that intersect with bbox or a geometry using intersects
      * date might be used as well as a filter
@@ -290,82 +375,29 @@ public class ItemService {
                                  List<SortBy> sort,
                                  Boolean includeCount,
                                  Boolean includeIds,
-                                 Boolean includeObjects) {
-
-        List<Item> allItems = new ArrayList<>();
-        List<Future<List<Item>>> futures = new ArrayList<>();
-        ExecutorService executorService = Executors.newFixedThreadPool(20); // Adjust the thread pool size as needed
-
-        Instant minDate = Instant.EPOCH;
-        Instant maxDate = Instant.now().plusSeconds(3155695200L);
-
-        if (datetime != null && datetime.contains("/")) {
-            String[] parts = datetime.split("/");
-            minDate = parts[0].equals("..") ? Instant.EPOCH : Instant.parse(parts[0]);
-            maxDate = parts[1].equals("..") ? Instant.now().plusSeconds(3155695200L) : Instant.parse(parts[1]);
-        } else if (datetime != null) {
-            minDate = Instant.parse(datetime);
-            maxDate = Instant.parse(datetime);
-        }
+                                 Boolean includeObjects) throws ExecutionException, InterruptedException {
 
         limit = limit == null ? 10 : limit;
-        Pageable pageable = PageRequest.of(0, 1500);
-        Slice<Item> itemPage;
-        try {
-            do {
-                final Pageable currentPageable = pageable;
 
-                // Build the query, applying the id filter if provided
-                Query dbQuery = Query.empty().pageRequest(currentPageable);
+        if (datetime == null)
+            throw new RuntimeException("datetime is required to filter out data");
 
-                if (collectionsArray != null) {
-                    dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray)).withAllowFiltering();
-                }
+        Map<String, String> dateTimes = parseDatetime(datetime);
+        List<String> partitionIds = getPartitions(intersects, ids, dateTimes);
 
-                if (datetime != null) {
-                    dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
-                            .and(Criteria.where("datetime").gte(minDate))
-                            .withAllowFiltering();
-                }
-                if (ids != null && !ids.isEmpty()) {
-                    dbQuery.and(Criteria.where("id").in(ids));
-                }
-
-                if (ids != null && !ids.isEmpty()) {
-                    dbQuery.and(Criteria.where("id").in(ids));
-                }
-                itemPage = cassandraTemplate.slice(dbQuery, Item.class);
-
-                Slice<Item> finalItemPage = itemPage;
-                Future<List<Item>> future = executorService.submit(finalItemPage::getContent);
-                futures.add(future);
-                pageable = itemPage.hasNext()
-                        ? ((CassandraPageRequest) finalItemPage.getPageable()).next()
-                        : null;
-
-            } while (pageable != null);
-
-            // Combine the results from all threads
-            for (Future<List<Item>> future : futures) {
-                allItems.addAll(future.get()); // get() will block until the task is done
-            }
-
-        } catch (InterruptedException | ExecutionException e) {
-            logger.error("Error during parallel pagination", e);
-            Thread.currentThread().interrupt();
-        } finally {
-            executorService.shutdown();
+        assert partitionIds != null;
+        List<Item> allItems = new ArrayList<>();
+        for (String partitionId : partitionIds) {
+            logger.info("partitionId");
+            logger.info(partitionId);
+        allItems.addAll(fetchItemsForPartition(partitionId, bbox, Instant.parse(dateTimes.get("minDate")), Instant.parse(dateTimes.get("maxDate")), collectionsArray, limit));
         }
 
         allItems = allItems.stream().filter(_item -> {
             boolean valid = true;
-//            if (ids != null) {
-//                valid = ids.contains(_item.getId().getId());
-//            }
-
-            if (intersects != null)
-                valid = GeometryUtil.fromGeometryByteBuffer(_item.getGeometry())
-                        .intersects(intersects);
+            if (ids != null) {
+                valid = ids.contains(_item.getId().getId());
+            }
 
             if (bbox != null) {
                 ItemDto itemDto;
@@ -394,7 +426,7 @@ public class ItemService {
         }).toList();
 
 
-        if (sort != null) {
+        if (sort != null && !sort.isEmpty()) {
             allItems = SortUtils.sortItems(allItems, sort);
         }
 
@@ -486,12 +518,10 @@ public class ItemService {
             Object bindVars,
             Boolean useCentroid,
             Boolean filterObjectsByPolygon) {
-        final int geoResolution = 6;
-        final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
 
         Polygon polygon = geometry.getFactory().createPolygon(geometry.getCoordinates());
-        return (maxDate != null && minDate != null) ? new GeoTimePartition(geoResolution, timeResolution)
-                .getGeoTimePartitions(polygon, minDate, maxDate) : new GeoPartition(geoResolution).getGeoPartitions(polygon);
+        return (maxDate != null && minDate != null) ? new GeoTimePartition()
+                .getGeoTimePartitions(polygon, minDate, maxDate) : new GeoPartition().getGeoPartitions(polygon);
     }
 
     public AggregationCollection agg(
@@ -503,15 +533,11 @@ public class ItemService {
             Map<String, Map<String, Object>> query,
             List<String> aggregations,
             List<AggregateRequest.Range> ranges
-    ) {
-        if (datetime.isEmpty())
-            throw new RuntimeException("datetime is required to filter out data");
-
+    ) throws ExecutionException, InterruptedException {
         ItemCollection itemCollection = search(bbox, intersects, datetime, MAX_VALUE, ids, collections, query, null, false, false, true);
 
         List<Aggregation> aggegationList = aggregations.stream().map(aggregationName -> {
             AggregationUtil aggregation = AggregationUtil.valueOf(aggregationName.toUpperCase());
-
             return aggregation.apply(itemCollection.getFeatures().orElse(null), ranges);
         }).toList();
         return new AggregationCollection(aggegationList);
