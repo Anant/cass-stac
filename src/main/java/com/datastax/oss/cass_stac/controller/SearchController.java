@@ -95,7 +95,7 @@ public class SearchController {
                                                                    """, description = "Search items that intersect this polygon, coordinates should be of length 4")}) @RequestParam(required = false) String intersects,
                                            @Parameter(description = "Either a date-time or an interval, open or closed. Date and time expressions adhere to RFC 3339. Open intervals are expressed using double-dots.",
                                                    examples = {
-                                                           @ExampleObject(name = "A closed interval", value = "2023-01-30T00:00:00Z/2018-03-18T12:31:12Z"),
+                                                           @ExampleObject(name = "A closed interval", value = "2018-03-18T12:31:12Z/2023-01-30T00:00:00Z"),
                                                            @ExampleObject(name = "Open intervals", value = """
                                                                    "2023-01-30T00:00:00Z/.." or "../2023-01-30T12:31:12Z
                                                                    """),
@@ -112,7 +112,7 @@ public class SearchController {
 
         SortUtils sortUtils = new SortUtils();
         try {
-            CompletableFuture<ItemCollection> response = itemService.search(
+            ItemCollection response = itemService.search(
                     bbox,
                     GeoJsonParser.parseGeometry(intersects),
                     datetime,
@@ -124,7 +124,7 @@ public class SearchController {
                     includeCount,
                     includeIds,
                     includeObjects);
-            return new ResponseEntity<>(response.get(), HttpStatus.OK);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception ex) {
             final Map<String, String> message = new HashMap<>();
             logger.error("Failed to fetch partitions.", ex);
@@ -156,7 +156,7 @@ public class SearchController {
 
         final Map<String, String> message = new HashMap<>();
         try {
-            CompletableFuture<ItemCollection> response = itemService.search(
+            ItemCollection response = itemService.search(
                     request.getBbox(),
                     request.getIntersects(),
                     request.getDatetime(),
@@ -168,7 +168,7 @@ public class SearchController {
                     includeCount,
                     includeIds,
                     includeObjects);
-            return new ResponseEntity<>(response.get(), HttpStatus.OK);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("Failed to fetch partitions.", ex);
             message.put("message", ex.getLocalizedMessage());

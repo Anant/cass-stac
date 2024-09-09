@@ -287,19 +287,21 @@ public class ItemService {
     public List<String> getPartitions(Geometry intersects, List<String> ids, Map<String, String> dateTimes) {
         final GeoTimePartition partitioner = new GeoTimePartition();
         List<String> partitions = new ArrayList<>();
-        if (intersects != null)
-            switch (intersects.getGeometryType()) {
+        if (intersects != null && ids == null)
+            partitions = switch (intersects.getGeometryType()) {
                 case "Point":
-                    partitions = partitioner.getGeoTimePartitionsForPoint(intersects.getCentroid(),
+                     yield partitioner.getGeoTimePartitionsForPoint(intersects.getCentroid(),
                             OffsetDateTime.parse(dateTimes.get("minOffsetDate")),
                             OffsetDateTime.parse(dateTimes.get("maxOffsetDate")));
                 case "Polygon":
-                    partitions = partitioner.getGeoTimePartitions(intersects.getFactory().createPolygon(intersects.getCoordinates()),
+                    yield partitioner.getGeoTimePartitions(intersects.getFactory().createPolygon(intersects.getCoordinates()),
                             OffsetDateTime.parse(dateTimes.get("minOffsetDate")),
                             OffsetDateTime.parse(dateTimes.get("maxOffsetDate")));
-            }
-        if (ids != null) {
-            partitions.addAll(ids.stream().map(id -> {
+                default:
+                    throw new IllegalStateException("Unexpected value: " + intersects.getGeometryType());
+            };
+        else if (ids != null) {
+            partitions = new ArrayList<>(ids.stream().map(id -> {
                 final ItemId itemId = itemIdDao.findById(id).orElse(null);
                 if (itemId != null) {
                     return itemId.getPartition_id();
@@ -307,26 +309,27 @@ public class ItemService {
                 return null;
             }).filter(Objects::nonNull).toList());
         }
-        return partitions;
+        logger.info(partitions.toString());
+        logger.info(String.valueOf(partitions.size()));
+        return partitions.stream().distinct().toList();
     }
 
-//    private Slice<Item> fetchItemsForPartition(String partitionId,
+//        private Slice<Item> fetchItemsForPartition(
     private List<Item> fetchItemsForPartition(String partitionId,
-                                               List<Float> bbox,
-                                               Instant minDate,
-                                               Instant maxDate,
-                                               List<String> ids,
-                                               List<String> collectionsArray,
-                                               Integer pageSize) {
+                                              List<Float> bbox,
+                                              Instant minDate,
+                                              Instant maxDate,
+                                              List<String> collectionsArray,
+                                              Integer pageSize) {
 //        Pageable pageable = PageRequest.of(0, pageSize);
 //        Slice<Item> itemPage;
         List<Item> itemPage;
 //        do {
 //            final Pageable currentPageable = pageable;
 
-        Query dbQuery = Query.query(Criteria.where("partition_id").is(partitionId));
+        Query dbQuery = Query.query(Criteria.where("partition_id").is(partitionId))
 //                    .pageRequest(currentPageable);
-
+;
         if (collectionsArray != null) {
             dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray));
         }
@@ -334,11 +337,13 @@ public class ItemService {
         dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
                 .and(Criteria.where("datetime").gte(minDate));
 
-        if (ids != null && !ids.isEmpty()) {
-            dbQuery.and(Criteria.where("id").in(ids));
-        }
-//            itemPage = cassandraTemplate.slice(dbQuery, Item.class);
+        //            itemPage = cassandraTemplate.slice(dbQuery, Item.class);
+        logger.info("dbQuery.toString()");
+        logger.info(dbQuery.toString());
         itemPage = cassandraTemplate.select(dbQuery, Item.class);
+
+        logger.info("itemPage.toString()");
+        logger.info(itemPage.toString());
 
 //            pageable = itemPage.hasNext()
 //                    ? ((CassandraPageRequest) itemPage.getPageable()).next()
@@ -366,21 +371,22 @@ public class ItemService {
      * @param includeObjects
      * @return
      */
-    @Async("asyncExecutor")
-    public CompletableFuture<ItemCollection> search(List<Float> bbox,
-                                                    Geometry intersects,
-                                                    String datetime,
-                                                    Integer limit,
-                                                    List<String> ids,
-                                                    List<String> collectionsArray,
-                                                    Map<String, Map<String, Object>> query,
-                                                    List<SortBy> sort,
-                                                    Boolean includeCount,
-                                                    Boolean includeIds,
-                                                    Boolean includeObjects) throws ExecutionException, InterruptedException {
+//    @Async("asyncExecutor")
+//    public CompletableFuture<ItemCollection> search(List<Float> bbox,
+    public ItemCollection search(List<Float> bbox,
+                                 Geometry intersects,
+                                 String datetime,
+                                 Integer limit,
+                                 List<String> ids,
+                                 List<String> collectionsArray,
+                                 Map<String, Map<String, Object>> query,
+                                 List<SortBy> sort,
+                                 Boolean includeCount,
+                                 Boolean includeIds,
+                                 Boolean includeObjects) throws ExecutionException, InterruptedException {
 
 //        List<CompletableFuture<Slice<Item>>> futures = new ArrayList<>();
-        List<CompletableFuture<List<Item>>> futures = new ArrayList<>();
+//        List<CompletableFuture<List<Item>>> futures = new ArrayList<>();
         limit = limit == null ? 10 : limit;
 
         if (datetime == null)
@@ -390,22 +396,26 @@ public class ItemService {
         List<String> partitionIds = getPartitions(intersects, ids, dateTimes);
 
         assert partitionIds != null;
+        List<Item> allItems = new ArrayList<>();
         for (String partitionId : partitionIds) {
-            Integer finalLimit = limit;
-//            CompletableFuture<Slice<Item>> partitionFuture = CompletableFuture.supplyAsync(() ->
-            CompletableFuture<List<Item>> partitionFuture = CompletableFuture.supplyAsync(() ->
-                    fetchItemsForPartition(partitionId, bbox, Instant.parse(dateTimes.get("minDate")), Instant.parse(dateTimes.get("maxDate")), ids, collectionsArray, finalLimit));
-            futures.add(partitionFuture);
+            logger.info("partitionId");
+            logger.info(partitionId);
+            //            CompletableFuture<Slice<Item>> partitionFuture = CompletableFuture.supplyAsync(() ->
+//            CompletableFuture<List<Item>> partitionFuture = CompletableFuture.supplyAsync(() ->
+        allItems.addAll(fetchItemsForPartition(partitionId, bbox, Instant.parse(dateTimes.get("minDate")), Instant.parse(dateTimes.get("maxDate")), collectionsArray, limit));
+//            futures.add(partitionFuture);
         }
-
-        List<Item> allItems = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenApply(v -> futures.stream()
-                        .flatMap(future -> future.join().stream())
-                        .collect(Collectors.toList())
-                ).get();
+//        List<Item> allItems = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+//                .thenApply(v -> futures.stream()
+//                        .flatMap(future -> future.join().stream())
+//                        .collect(Collectors.toList())
+//                ).get();
 
         allItems = allItems.stream().filter(_item -> {
             boolean valid = true;
+            if (ids != null) {
+                valid = ids.contains(_item.getId().getId());
+            }
 
             if (bbox != null) {
                 ItemDto itemDto;
@@ -434,7 +444,7 @@ public class ItemService {
         }).toList();
 
 
-        if (sort != null) {
+        if (sort != null && !sort.isEmpty()) {
             allItems = SortUtils.sortItems(allItems, sort);
         }
 
@@ -446,7 +456,8 @@ public class ItemService {
         Optional<Integer> matchedCount = includeCount ? Optional.of(numberMatched) : Optional.empty();
         Optional<Integer> returnedCount = includeCount ? Optional.of(numberReturned) : Optional.empty();
 
-        return CompletableFuture.completedFuture(new ItemCollection(items, returnPartitions, matchedCount, returnedCount));
+        return new ItemCollection(items, returnPartitions, matchedCount, returnedCount);
+//        return CompletableFuture.completedFuture(new ItemCollection(items, returnPartitions, matchedCount, returnedCount));
     }
 
     private Boolean BboxIntersects(List<Float> current, List<Float> other) {
@@ -542,16 +553,12 @@ public class ItemService {
             List<String> aggregations,
             List<AggregateRequest.Range> ranges
     ) throws ExecutionException, InterruptedException {
-        CompletableFuture<ItemCollection> itemCollection = search(bbox, intersects, datetime, MAX_VALUE, ids, collections, query, null, false, false, true);
+        ItemCollection itemCollection = search(bbox, intersects, datetime, MAX_VALUE, ids, collections, query, null, false, false, true);
+//        CompletableFuture<ItemCollection> itemCollection = search(bbox, intersects, datetime, MAX_VALUE, ids, collections, query, null, false, false, true);
 
         List<Aggregation> aggegationList = aggregations.stream().map(aggregationName -> {
             AggregationUtil aggregation = AggregationUtil.valueOf(aggregationName.toUpperCase());
-
-            try {
-                return aggregation.apply(itemCollection.get().getFeatures().orElse(null), ranges);
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException(e);
-            }
+            return aggregation.apply(itemCollection.getFeatures().orElse(null), ranges);
         }).toList();
         return new AggregationCollection(aggegationList);
     }

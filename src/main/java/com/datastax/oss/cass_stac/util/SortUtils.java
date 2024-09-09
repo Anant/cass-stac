@@ -49,23 +49,23 @@ public class SortUtils {
     }
 
     public List<SortBy> parseSortBy(String sortBy) {
-        String[] sortParams = sortBy.split(",");
         List<SortBy> sort = new ArrayList<>(List.of());
+        if (sortBy != null) {
+            String[] sortParams = sortBy.split(",");
+            for (String param : sortParams) {
+                String direction = "asc";
+                String field = param;
 
-        for (String param : sortParams) {
-            String direction = "asc";
-            String field = param;
+                if (param.startsWith("-")) {
+                    direction = "desc";
+                    field = param.substring(1);
+                } else if (param.startsWith("+")) {
+                    field = param.substring(1);
+                }
 
-            if (param.startsWith("-")) {
-                direction = "desc";
-                field = param.substring(1);
-            } else if (param.startsWith("+")) {
-                field = param.substring(1);
+                sort.add(new SortBy(direction, field));
             }
-
-            sort.add(new SortBy(direction, field));
         }
-
         return sort;
     }
 
