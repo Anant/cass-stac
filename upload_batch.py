@@ -26,10 +26,10 @@ failed_ids_file_path = 'failed_ids.log'
 log_file_path = 'process.log'
 
 # Batch size
-batch_size = 100
+batch_size = 10
 
 # Number of threads
-num_threads = 10
+num_threads = 64
 
 def log(message):
     with open(log_file_path, 'a') as log_file:
