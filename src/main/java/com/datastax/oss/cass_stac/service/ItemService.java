@@ -283,10 +283,10 @@ public class ItemService {
             result.put("maxDate", datetime);
             result.put("maxOffsetDate", datetime);
         }
-	logger.info(result.get("minDate").toString());
-        logger.info(result.get("minOffsetDate").toString());
-        logger.info(result.get("maxDate").toString());
-        logger.info(result.get("maxOffsetDate").toString());
+	    //logger.info(result.get("minDate").toString());
+        //logger.info(result.get("minOffsetDate").toString());
+        //logger.info(result.get("maxDate").toString());
+        //logger.info(result.get("maxOffsetDate").toString());
         return result;
     }
 
@@ -315,8 +315,8 @@ public class ItemService {
                 return null;
             }).filter(Objects::nonNull).toList());
         }
-        logger.info(partitions.toString());
-        logger.info(String.valueOf(partitions.size()));
+        //logger.info(partitions.toString());
+        //logger.info(String.valueOf(partitions.size()));
         return partitions.stream().distinct().toList();
     }
 
@@ -337,12 +337,12 @@ public class ItemService {
         dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
                 .and(Criteria.where("datetime").gte(minDate));
 
-        logger.info("dbQuery.toString()");
-        logger.info(dbQuery.toString());
+        //logger.info("dbQuery.toString()");
+        //logger.info(dbQuery.toString());
         itemPage = cassandraTemplate.select(dbQuery, Item.class);
 
-        logger.info("itemPage.toString()");
-        logger.info(itemPage.toString());
+        //logger.info("itemPage.toString()");
+        //logger.info(itemPage.toString());
 
 
         return itemPage;
@@ -366,12 +366,12 @@ public class ItemService {
         dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
                 .and(Criteria.where("datetime").gte(minDate));
 
-        logger.info("dbQuery.toString()");
-        logger.info(dbQuery.toString());
+        //logger.info("dbQuery.toString()");
+        //logger.info(dbQuery.toString());
         itemPage = cassandraTemplate.select(dbQuery, Item.class);
 
-        logger.info("itemPage.toString()");
-        logger.info(itemPage.toString());
+        //logger.info("itemPage.toString()");
+        //logger.info(itemPage.toString());
 
 
         return CompletableFuture.completedFuture(itemPage);
@@ -455,7 +455,7 @@ public class ItemService {
                 Map<String, Object> additionalAttributes;
                 JsonNode attributes;
                 try {
-                    attributes = objectMapper.readValue(_item.getAdditional_attributes(), JsonNode.class).get("properties");
+                    attributes = objectMapper.readValue(_item.getProperties(), JsonNode.class);
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
