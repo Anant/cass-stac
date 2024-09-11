@@ -348,6 +348,35 @@ public class ItemService {
         return itemPage;
     }
 
+    @Async("asyncExecutor")
+    private CompletableFuture<List<Item>> fetchItemsForPartitionAsync(String partitionId,
+                                              List<Float> bbox,
+                                              Instant minDate,
+                                              Instant maxDate,
+                                              List<String> collectionsArray,
+                                              Integer pageSize) {
+        List<Item> itemPage;
+
+        Query dbQuery = Query.query(Criteria.where("partition_id").is(partitionId))
+;
+        if (collectionsArray != null) {
+            dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray));
+        }
+
+        dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
+                .and(Criteria.where("datetime").gte(minDate));
+
+        logger.info("dbQuery.toString()");
+        logger.info(dbQuery.toString());
+        itemPage = cassandraTemplate.select(dbQuery, Item.class);
+
+        logger.info("itemPage.toString()");
+        logger.info(itemPage.toString());
+
+
+        return CompletableFuture.completedFuture(itemPage);
+    }
+
     /**
      * search within all items, items that intersect with bbox or a geometry using intersects
      * date might be used as well as a filter
@@ -386,12 +415,24 @@ public class ItemService {
         List<String> partitionIds = getPartitions(intersects, ids, dateTimes);
 
         assert partitionIds != null;
-        List<Item> allItems = new ArrayList<>();
+        List<CompletableFuture<List<Item>>> futures = new ArrayList<>();
+
         for (String partitionId : partitionIds) {
-            logger.info("partitionId");
-            logger.info(partitionId);
-        allItems.addAll(fetchItemsForPartition(partitionId, bbox, Instant.parse(dateTimes.get("minDate")), Instant.parse(dateTimes.get("maxDate")), collectionsArray, limit));
+            logger.info("Fetching items for partitionId: " + partitionId);
+            CompletableFuture<List<Item>> future = fetchItemsForPartitionAsync(partitionId, bbox,
+                    Instant.parse(dateTimes.get("minDate")), Instant.parse(dateTimes.get("maxDate")),
+                    collectionsArray, limit);
+            futures.add(future);
         }
+
+        CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        CompletableFuture<List<Item>> allItemsFuture = allFutures.thenApply(v -> 
+            futures.stream()
+                .flatMap(future -> future.join().stream())  
+                .collect(Collectors.toList())
+        );
+        
+        List<Item> allItems = allItemsFuture.get();  
 
         allItems = allItems.stream().filter(_item -> {
             boolean valid = true;
