@@ -283,10 +283,6 @@ public class ItemService {
             result.put("maxDate", datetime);
             result.put("maxOffsetDate", datetime);
         }
-	    //logger.info(result.get("minDate").toString());
-        //logger.info(result.get("minOffsetDate").toString());
-        //logger.info(result.get("maxDate").toString());
-        //logger.info(result.get("maxOffsetDate").toString());
         return result;
     }
 
@@ -315,8 +311,6 @@ public class ItemService {
                 return null;
             }).filter(Objects::nonNull).toList());
         }
-        //logger.info(partitions.toString());
-        //logger.info(String.valueOf(partitions.size()));
         return partitions.stream().distinct().toList();
     }
 
@@ -328,21 +322,16 @@ public class ItemService {
                                               Integer pageSize) {
         List<Item> itemPage;
 
-        Query dbQuery = Query.query(Criteria.where("partition_id").is(partitionId))
-;
-        if (collectionsArray != null) {
-            dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray));
+        Query dbQuery = Query.query(Criteria.where("partition_id").is(partitionId));
+
+        if (collectionsArray != null && !collectionsArray.isEmpty()) {
+            dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray)).withAllowFiltering();
         }
 
         dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
                 .and(Criteria.where("datetime").gte(minDate));
 
-        //logger.info("dbQuery.toString()");
-        //logger.info(dbQuery.toString());
         itemPage = cassandraTemplate.select(dbQuery, Item.class);
-
-        //logger.info("itemPage.toString()");
-        //logger.info(itemPage.toString());
 
 
         return itemPage;
@@ -357,22 +346,16 @@ public class ItemService {
                                               Integer pageSize) {
         List<Item> itemPage;
 
-        Query dbQuery = Query.query(Criteria.where("partition_id").is(partitionId))
-;
-        if (collectionsArray != null) {
-            dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray));
+        Query dbQuery = Query.query(Criteria.where("partition_id").is(partitionId));
+
+        if (collectionsArray != null && !collectionsArray.isEmpty()) {
+            dbQuery = dbQuery.and(Criteria.where("collection").in(collectionsArray)).withAllowFiltering();
         }
 
         dbQuery = dbQuery.and(Criteria.where("datetime").lte(maxDate))
                 .and(Criteria.where("datetime").gte(minDate));
 
-        //logger.info("dbQuery.toString()");
-        //logger.info(dbQuery.toString());
         itemPage = cassandraTemplate.select(dbQuery, Item.class);
-
-        //logger.info("itemPage.toString()");
-        //logger.info(itemPage.toString());
-
 
         return CompletableFuture.completedFuture(itemPage);
     }
