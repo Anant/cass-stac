@@ -6,8 +6,10 @@ import com.datastax.oss.cass_stac.model.AggregateRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 
-import java.time.*;
-import java.util.ArrayList;
+import java.time.Instant;
+import java.time.Month;
+import java.time.Year;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,10 +70,7 @@ public enum AggregationUtil {
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
-                List<AggregateRequest.Range> _ranges = new ArrayList<>();
-                        if(ranges == null)
-                            _ranges.add(new AggregateRequest.Range());
-                        else _ranges = ranges;
+                List<AggregateRequest.Range> _ranges = ranges == null ? List.of(new AggregateRequest.Range()) : ranges;
                 return _ranges.stream()
                         .filter(range -> range.contains(value)).findFirst();
             }, Collectors.counting()));
@@ -119,7 +118,7 @@ public enum AggregationUtil {
         @Override
         public Aggregation apply(List<Item> items, List<AggregateRequest.Range> ranges) {
             Map<Integer, Long> frequencyMap = items.stream().collect(Collectors.groupingBy(item ->
-             Year.from(item.getDatetime().atZone(ZoneId.systemDefault())).getValue(), Collectors.counting()));
+                    Year.from(item.getDatetime().atZone(ZoneId.systemDefault())).getValue(), Collectors.counting()));
             List<Aggregation.Bucket> buckets =
                     frequencyMap.entrySet().stream()
                             .map(entry -> {
