@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +34,21 @@ public class ParallelItemController {
     @Operation(description = "Get method to fetch Item data in parallel based on a list of item IDs")
     @GetMapping
     public ResponseEntity<?> getItemsParallel(@RequestParam final List<String> ids) {
+        try {
+            final List<ItemModelResponse> itemModels = ids.stream()
+		    .map(itemService::getItemsByIdParallel)
+		    .toList().stream().map(CompletableFuture::join).collect(Collectors.toList());
+            return new ResponseEntity<>(itemModels, HttpStatus.OK);
+        } catch (Exception ex) {
+            final Map<String, String> message = new HashMap<>();
+            message.put("message", ex.getLocalizedMessage());
+            return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Operation(description = "Post method to fetch Item data in parallel based on a list of item IDs")
+    @PostMapping
+    public ResponseEntity<?> postItemsParallel(@Parameter @RequestBody final List<String> ids) {
         try {
             final List<ItemModelResponse> itemModels = ids.stream()
 		    .map(itemService::getItemsByIdParallel)
