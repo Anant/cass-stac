@@ -18,25 +18,32 @@ import java.util.Map;
 @Getter
 @Setter
 public class Item {
-	@PrimaryKey
-	private ItemPrimaryKey id;
-	private String collection;
-	private Instant datetime;
-	private ByteBuffer geometry;
-	private Map<String, String> indexed_properties_text;
-	private Map<String, Number> indexed_properties_double;
-	private Map<String, Boolean> indexed_properties_boolean;
-	private Map<String, Instant> indexed_properties_timestamp;
-	private String properties;
-	private String additional_attributes;
-	private CqlVector<Float> centroid;
+    @PrimaryKey
+    private ItemPrimaryKey id;
+    private String collection;
+    private Instant datetime;
+    private ByteBuffer geometry;
+    private Map<String, String> indexed_properties_text;
+    private Map<String, Number> indexed_properties_double;
+    private Map<String, Boolean> indexed_properties_boolean;
+    private Map<String, Instant> indexed_properties_timestamp;
+    private String properties;
+    private String additional_attributes;
+    private CqlVector<Float> centroid;
 
-	public Double getCloudCover() throws JsonProcessingException {
-		ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    public Double getCloudCover() throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
-			Map<String, Object> map = objectMapper.readValue(properties, new TypeReference<>() {
-			});
-			Object value = map.get("eo:cloud_cover");
-			return value != null ? Double.parseDouble(value.toString()) : null;
-	}
+        Map<String, Object> map = objectMapper.readValue(properties, new TypeReference<>() {
+        });
+        Object value = map.get("eo:cloud_cover");
+        if (value != null) {
+            try {
+                return Double.parseDouble(value.toString());
+            } catch (NumberFormatException e) {
+                return Double.longBitsToDouble(Long.getLong(value.toString()));
+            }
+        }
+        return null;
+    }
 }
