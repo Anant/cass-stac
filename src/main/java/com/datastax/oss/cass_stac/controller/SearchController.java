@@ -114,7 +114,7 @@ public class SearchController {
         try {
             ItemCollection response = itemService.search(
                     bbox,
-                    GeoJsonParser.parseGeometry(intersects),
+                    intersects != null ? GeoJsonParser.parseGeometry(intersects) : null,
                     datetime,
                     limit,
                     ids,

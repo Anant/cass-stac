@@ -271,7 +271,7 @@ public class ItemService {
 
         if (datetime.contains("/")) {
             String[] parts = datetime.split("/");
-	    Instant rangeCenter = Instant.parse("2023-01-01T00:00:00.00Z");
+            Instant rangeCenter = Instant.parse("2023-01-01T00:00:00.00Z");
 
             result.put("minDate", parts[0].equals("..") ? rangeCenter.minusSeconds(15770000L).toString() : parts[0]);
             result.put("minOffsetDate", parts[0].equals("..") ? rangeCenter.minusSeconds(15770000L).toString() : parts[0]);
@@ -289,10 +289,12 @@ public class ItemService {
     public List<String> getPartitions(Geometry intersects, List<String> ids, Map<String, String> dateTimes) {
         final GeoTimePartition partitioner = new GeoTimePartition();
         List<String> partitions = new ArrayList<>();
-        if (intersects != null && ids == null)
+        if (intersects == null && (ids == null || ids.isEmpty()))
+            throw new RuntimeException("Filter on either ids or intersects should be passed to search");
+        if (ids == null)
             partitions = switch (intersects.getGeometryType()) {
                 case "Point":
-                     yield partitioner.getGeoTimePartitionsForPoint(intersects.getCentroid(),
+                    yield partitioner.getGeoTimePartitionsForPoint(intersects.getCentroid(),
                             OffsetDateTime.parse(dateTimes.get("minOffsetDate")),
                             OffsetDateTime.parse(dateTimes.get("maxOffsetDate")));
                 case "Polygon":
@@ -302,7 +304,7 @@ public class ItemService {
                 default:
                     throw new IllegalStateException("Unexpected value: " + intersects.getGeometryType());
             };
-        else if (ids != null) {
+        else if (!ids.isEmpty()) {
             partitions = new ArrayList<>(ids.stream().map(id -> {
                 final ItemId itemId = itemIdDao.findById(id).orElse(null);
                 if (itemId != null) {
@@ -318,8 +320,7 @@ public class ItemService {
                                               List<Float> bbox,
                                               Instant minDate,
                                               Instant maxDate,
-                                              List<String> collectionsArray,
-                                              Integer pageSize) {
+                                              List<String> collectionsArray) {
         List<Item> itemPage;
 
         Query dbQuery = Query.query(Criteria.where("partition_id").is(partitionId));
@@ -338,12 +339,11 @@ public class ItemService {
     }
 
     @Async("asyncExecutor")
-    private CompletableFuture<List<Item>> fetchItemsForPartitionAsync(String partitionId,
-                                              List<Float> bbox,
-                                              Instant minDate,
-                                              Instant maxDate,
-                                              List<String> collectionsArray,
-                                              Integer pageSize) {
+    protected CompletableFuture<List<Item>> fetchItemsForPartitionAsync(String partitionId,
+                                                                        List<Float> bbox,
+                                                                        Instant minDate,
+                                                                        Instant maxDate,
+                                                                        List<String> collectionsArray) {
         List<Item> itemPage;
 
         Query dbQuery = Query.query(Criteria.where("partition_id").is(partitionId));
@@ -391,64 +391,58 @@ public class ItemService {
 
         limit = limit == null ? 10 : limit;
 
-        if (datetime == null)
-            throw new RuntimeException("datetime is required to filter out data");
-
         Map<String, String> dateTimes = parseDatetime(datetime);
         List<String> partitionIds = getPartitions(intersects, ids, dateTimes);
 
-        assert partitionIds != null;
         List<CompletableFuture<List<Item>>> futures = new ArrayList<>();
 
         for (String partitionId : partitionIds) {
-            logger.info("Fetching items for partitionId: " + partitionId);
+            logger.info("Fetching items for partitionId: {}", partitionId);
             CompletableFuture<List<Item>> future = fetchItemsForPartitionAsync(partitionId, bbox,
                     Instant.parse(dateTimes.get("minDate")), Instant.parse(dateTimes.get("maxDate")),
-                    collectionsArray, limit);
+                    collectionsArray);
             futures.add(future);
         }
 
         CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-        CompletableFuture<List<Item>> allItemsFuture = allFutures.thenApply(v -> 
-            futures.stream()
-                .flatMap(future -> future.join().stream())  
-                .collect(Collectors.toList())
+        CompletableFuture<List<Item>> allItemsFuture = allFutures.thenApply(v ->
+                futures.stream()
+                        .flatMap(future -> future.join().stream())
+                        .filter(_item -> {
+                            boolean valid = true;
+                            if (ids != null) {
+                                valid = ids.contains(_item.getId().getId());
+                            }
+
+                            if (bbox != null) {
+                                ItemDto itemDto;
+                                try {
+                                    itemDto = convertItemToDto(_item);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                valid = BboxIntersects(itemDto.getBbox(), bbox);
+                            }
+
+                            if (query != null) {
+                                QueryEvaluator evaluator = new QueryEvaluator();
+                                Map<String, Object> additionalAttributes;
+                                JsonNode attributes;
+                                try {
+                                    attributes = objectMapper.readValue(_item.getProperties(), JsonNode.class);
+                                } catch (JsonProcessingException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                additionalAttributes = objectMapper.convertValue(attributes, new TypeReference<>() {
+                                });
+                                valid = evaluator.evaluate(query, additionalAttributes);
+                            }
+                            return valid;
+                        })
+                        .collect(Collectors.toList())
         );
-        
-        List<Item> allItems = allItemsFuture.get();  
 
-        allItems = allItems.stream().filter(_item -> {
-            boolean valid = true;
-            if (ids != null) {
-                valid = ids.contains(_item.getId().getId());
-            }
-
-            if (bbox != null) {
-                ItemDto itemDto;
-                try {
-                    itemDto = convertItemToDto(_item);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                valid = BboxIntersects(itemDto.getBbox(), bbox);
-            }
-
-            if (query != null) {
-                QueryEvaluator evaluator = new QueryEvaluator();
-                Map<String, Object> additionalAttributes;
-                JsonNode attributes;
-                try {
-                    attributes = objectMapper.readValue(_item.getProperties(), JsonNode.class);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-                additionalAttributes = objectMapper.convertValue(attributes, new TypeReference<>() {
-                });
-                valid = evaluator.evaluate(query, additionalAttributes);
-            }
-            return valid;
-        }).toList();
-
+        List<Item> allItems = allItemsFuture.get();
 
         if (sort != null && !sort.isEmpty()) {
             allItems = SortUtils.sortItems(allItems, sort);
