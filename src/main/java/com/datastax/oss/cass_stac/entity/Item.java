@@ -36,14 +36,14 @@ public class Item {
 
         Map<String, Object> map = objectMapper.readValue(properties, new TypeReference<>() {
         });
-        Object value = map.get("eo:cloud_cover");
-        if (value != null) {
-            try {
-                return Double.parseDouble(value.toString());
-            } catch (NumberFormatException e) {
-                return Double.longBitsToDouble(Long.getLong(value.toString()));
-            }
+        if (properties == null) {
+            return -1.0;
         }
-        return null;
+        Object value = map.getOrDefault("eo:cloud_cover", -1.0);
+        try {
+            return Double.parseDouble(value.toString());
+        } catch (NumberFormatException e) {
+            return Double.longBitsToDouble(Long.getLong(value.toString()));
+        }
     }
 }

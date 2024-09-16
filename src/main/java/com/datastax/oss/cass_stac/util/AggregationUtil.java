@@ -82,10 +82,8 @@ public enum AggregationUtil {
                                     bucket.setKey(entry.getKey().get().toString());
                                     bucket.setFrequency(Math.toIntExact(entry.getValue()));
                                     bucket.setData_type("numeric");
-                                    if (entry.getKey().get().getFrom().isPresent())
-                                        bucket.setFrom(entry.getKey().get().getFrom().orElse(null));
-                                    if (entry.getKey().get().getTo().isPresent())
-                                        bucket.setTo(entry.getKey().get().getTo().orElse(null));
+                                    bucket.setFrom(entry.getKey().get().getFrom());
+                                    bucket.setTo(entry.getKey().get().getTo());
                                 }
                                 return bucket;
                             })
