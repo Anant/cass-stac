@@ -1,9 +1,13 @@
 # STAC on Cassandra
 
+## Architecture
+
+![Architecture.Cass.Stac.png](img/Architecture.Cass.Stac.png)
+
 The application uses Spring Data Cassandra and DataStax Astra DB to build a REST API for
 a [Spatio-Temporal Asset Catalog (STAC)](https://stacspec.org/en) that can scale to hundreds of billions of STAC items.
 
-![img.png](img/img.png)
+![Swagger UI](img/img.png)
 
 ## Objectives
 
